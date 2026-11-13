@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Campus Directory | Avora{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+    <button class="mobile-menu-toggle" id="mobile-toggle" aria-label="Toggle navigation menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    {% include 'student/_sidebar.html' %}
+
+    <main class="main-content">
+        <!-- Standard Back Button -->
+        {% include 'components/back_button.html' %}
+
+        <div class="command-header">
+            <span class="overline">Campus Directory</span>
+            <h1 class="command-greeting" style="font-size: 1.75rem;">Campus Contacts</h1>
+            <p class="command-subtext">Direct telephone, email, and room coordinates for university administrative cells, academic faculties, and deans.</p>
+        </div>
+
+        <!-- Directory Search & Filter Utility Bar -->
+        <div style="background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--s-16); margin-bottom: var(--s-24);">
+            <form method="GET" action="{{ url_for('contacts.index') }}" style="display: flex; gap: var(--s-12); flex-wrap: wrap; margin-bottom: var(--s-12);">
+                <input type="text" name="q" value="{{ search_query or '' }}" placeholder="Search by name, office, designation, or department..." class="form-input" style="flex: 1; min-width: 240px; margin: 0;">
+                <button type="submit" class="btn btn-primary">
+                    Search Directory
+                </button>
+                {% if search_query or current_category %}
+                <a href="{{ url_for('contacts.index') }}" class="btn btn-ghost">Reset Filter</a>
+                {% endif %}
+            </form>
+
+            <!-- Category Pills -->
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                <span class="text-caption" style="margin-right: 4px;">Department:</span>
+                <a href="{{ url_for('contacts.index') }}" class="btn btn-sm {% if not current_category %}btn-primary{% else %}btn-ghost{% endif %}">
+                    All Entries
+                </a>
+                {% for cat in categories %}
+                <a href="{{ url_for('contacts.index', category=cat) }}" class="btn btn-sm {% if current_category == cat %}btn-primary{% else %}btn-ghost{% endif %}">
+                    {{ cat }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Directory Entries -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <div>
+                    <h3 class="section-card-title">Directory Listings</h3>
+                    <p class="text-sm text-secondary">Displaying authenticated university contact entries.</p>
+                </div>
+                <span class="badge badge-department">{{ contacts | length }} Listed</span>
+            </div>
+
+            {% if contacts %}
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Office / Personnel</th>
+                            <th>Department</th>
+                            <th>Telephone</th>
+                            <th>Email Address</th>
+                            <th>Location / Hours</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in contacts %}
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600; color: var(--text);">{{ c.name }}</div>
+                                {% if c.designation %}
+                                <div class="text-xs text-muted">{{ c.designation }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-year">{{ c.department or c.category }}</span>
+                            </td>
+                            <td>
+                                {% if c.phone %}
+                                <a href="tel:{{ c.phone }}" style="font-family: var(--font-ui); font-size: 0.85rem; font-weight: 500;">{{ c.phone }}</a>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if c.email %}
+                                <a href="mailto:{{ c.email }}" style="font-size: 0.85rem;">{{ c.email }}</a>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="font-size: 0.85rem;">{{ c.office_location or 'Main Campus' }}</div>
+                                {% if c.office_hours %}
+                                <div class="text-xs text-muted">{{ c.office_hours }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('campus_map.index') }}" class="btn btn-ghost btn-sm" title="View location on Campus Map">
+                                    Map
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                    </svg>
+                </div>
+                <h4>No contacts found</h4>
+                <p>{% if search_query %}No university personnel matched your query "{{ search_query }}".{% else %}The directory is clear for this category.{% endif %}</p>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+{% endblock %}

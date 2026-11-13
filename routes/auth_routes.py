@@ -1,5 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify, current_app
-from services.user_service import create_user, authenticate_user, get_user_by_email, get_user_by_roll_no, get_db, get_user_by_email_and_role
+from services.user_service import (
+    create_user, authenticate_user, get_user_by_email, get_user_by_roll_no,
+    get_db, get_user_by_email_and_role, get_system_setting
+)
 from services.email_service import generate_otp, send_otp_email
 from config import Config
 from datetime import datetime
@@ -10,11 +13,15 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/student/send-otp', methods=['POST'])
 def send_otp():
     """Generate and send OTP for registration."""
-    data = request.get_json()
+    data = request.get_json() or {}
     email = data.get('email', '').strip().lower()
     
-    if not email.endswith('@kmclu.ac.in'):
-        return jsonify({'success': False, 'message': 'Only @kmclu.ac.in emails are allowed.'}), 400
+    allow_any_email = get_system_setting('allow_any_email', False)
+    if not allow_any_email and not email.endswith('@kmclu.ac.in'):
+        return jsonify({'success': False, 'message': 'Only @kmclu.ac.in institutional emails are allowed.'}), 400
+        
+    if not email or '@' not in email or '.' not in email.split('@')[-1]:
+        return jsonify({'success': False, 'message': 'Please enter a valid email address.'}), 400
         
     if get_user_by_email(email):
         return jsonify({'success': False, 'message': 'An account with this email already exists.'}), 400
@@ -37,7 +44,7 @@ def send_otp():
 @auth_bp.route('/student/verify-otp', methods=['POST'])
 def verify_otp():
     """Verify OTP for registration."""
-    data = request.get_json()
+    data = request.get_json() or {}
     email = data.get('email', '').strip().lower()
     otp_input = data.get('otp', '').strip()
     
@@ -55,6 +62,8 @@ def verify_otp():
 @auth_bp.route('/student/signup', methods=['GET', 'POST'])
 def student_signup():
     """Student registration page."""
+    allow_any_email = get_system_setting('allow_any_email', False)
+
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         email = request.form.get('email', '').strip().lower()
@@ -67,8 +76,10 @@ def student_signup():
         
         # Validation
         errors = []
-        if not email.endswith('@kmclu.ac.in'):
+        if not allow_any_email and not email.endswith('@kmclu.ac.in'):
             errors.append('Only @kmclu.ac.in emails are allowed.')
+        elif not email or '@' not in email:
+            errors.append('Please provide a valid email address.')
         
         required_fields = [name, email, roll_no, department, year, password]
         if not Config.BYPASS_OTP:
@@ -99,7 +110,8 @@ def student_signup():
                                    departments=Config.DEPARTMENTS,
                                    years=Config.YEARS,
                                    form_data=request.form,
-                                   bypass_otp=Config.BYPASS_OTP)
+                                   bypass_otp=Config.BYPASS_OTP,
+                                   allow_any_email=allow_any_email)
         
         # Create user
         user = create_user({
@@ -117,7 +129,8 @@ def student_signup():
     return render_template('auth/student_signup.html',
                            departments=Config.DEPARTMENTS,
                            years=Config.YEARS,
-                           bypass_otp=Config.BYPASS_OTP)
+                           bypass_otp=Config.BYPASS_OTP,
+                           allow_any_email=allow_any_email)
 
 
 @auth_bp.route('/student/login', methods=['GET', 'POST'])
@@ -163,9 +176,10 @@ def admin_login():
             session['user_role'] = 'admin'
             session['user_email'] = user['email']
             session['is_teacher'] = user.get('is_teacher', False)
+            session['admin_scope'] = user.get('admin_scope', 'all')
             session.permanent = True
             
-            flash('Welcome to the Control Room.', 'success')
+            flash('Welcome to the admin panel.', 'success')
             return redirect(url_for('admin.dashboard'))
         else:
             flash('Invalid credentials.', 'error')
@@ -181,9 +195,15 @@ def google_login():
     """Redirect to Google for OAuth login (students only)."""
     oauth = current_app.oauth
     redirect_uri = Config.GOOGLE_REDIRECT_URI
+    allow_any_email = get_system_setting('allow_any_email', False)
+    
+    auth_params = {}
+    if not allow_any_email:
+        auth_params['hd'] = 'kmclu.ac.in'  # Restrict to kmclu.ac.in Google Workspace
+        
     return oauth.google.authorize_redirect(
         redirect_uri,
-        hd='kmclu.ac.in',  # Restrict to kmclu.ac.in Google Workspace
+        **auth_params
     )
 
 
@@ -206,9 +226,10 @@ def google_callback():
     email = user_info.get('email', '').strip().lower()
     name = user_info.get('name', '')
 
-    # Enforce @kmclu.ac.in domain
-    if not email.endswith('@kmclu.ac.in'):
-        flash('Only @kmclu.ac.in Google accounts are accepted.', 'error')
+    allow_any_email = get_system_setting('allow_any_email', False)
+    # Enforce @kmclu.ac.in domain if open registration is disabled
+    if not allow_any_email and not email.endswith('@kmclu.ac.in'):
+        flash('Only @kmclu.ac.in Google accounts are accepted under current university policy.', 'error')
         return redirect(url_for('auth.student_login'))
 
     # Look up existing student user

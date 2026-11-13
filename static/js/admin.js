@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   UNICRACY — Admin JavaScript
+   AVORA - Admin JavaScript
    View switcher, filter tabs, form helpers
    ═══════════════════════════════════════════════════════ */
 

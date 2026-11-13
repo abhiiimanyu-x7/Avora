@@ -1,8 +1,19 @@
-# UNICRACY
+# AVORA
 
-### One University. One Election.
+### Unified University Platform
 
-A Modern Campus Election & Representation Platform built with Flask, MongoDB Atlas, HTML5, CSS3, and Vanilla JavaScript.
+A multi-service campus platform built with Flask, MongoDB Atlas, HTML5, CSS3, and Vanilla JavaScript.
+
+---
+
+## Service Modules
+
+- 🗳️ **Elections** - Scheduled campus elections with automated status transitions, candidate manifestos, and one-vote enforcement.
+- 🔍 **Lost & Found** - Admin-verified reporting and claim resolution with verification questions and duplicate checks.
+- 📢 **Notices & Deadlines** - Official announcements with attached deadlines, auto-expiration, and priority alerts.
+- 🧘 **Digital Wellbeing** - Private daily mood check-ins, personal trend tracking, and verified campus counseling resources.
+- 📇 **Campus Contacts** - Directory of departments, emergency contacts, administrative offices, and faculties.
+- 🗺️ **Campus Map** - Interactive labeled guide to campus zones, academic blocks, and student facilities.
 
 ---
 
@@ -41,21 +52,10 @@ The app will be available at `http://localhost:5000`
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | HTML5, CSS3, Vanilla JavaScript |
-| Backend | Python Flask |
+| Frontend | HTML5, Modern Institutional CSS, Vanilla JavaScript |
+| Backend | Python Flask (Modular Monolith) |
 | Database | MongoDB Atlas |
-| Auth | Flask Sessions + Werkzeug |
-
----
-
-## Features
-
-- 🗳️ **One Vote Lock** — Each student can vote only once per election
-- 🏛️ **Election Control Room** — Admin dashboard for managing elections
-- 📋 **Candidate Manifestos** — Rich candidate profile cards
-- 📊 **Result Analytics** — Visual result displays with animated charts
-- 🔒 **Privacy-First** — Admins cannot see individual vote choices
-- 📱 **Fully Responsive** — Works on desktop, tablet, and mobile
+| Auth & Audit | Session auth, Scoped Admin RBAC, Audit Logging |
 
 ---
 

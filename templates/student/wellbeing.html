@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Study Balance &amp; Wellbeing | Avora{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+    <button class="mobile-menu-toggle" id="mobile-toggle" aria-label="Toggle navigation menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    {% include 'student/_sidebar.html' %}
+
+    <main class="main-content">
+        <!-- Standard Back Button -->
+        {% include 'components/back_button.html' %}
+
+        <div class="command-header">
+            <span class="overline">Confidential Campus Space</span>
+            <h1 class="command-greeting" style="font-size: 1.75rem;">Digital Wellbeing &amp; Study Balance</h1>
+            <p class="command-subtext">Private daily reflection for academic workload management. Your entries are visible only to you.</p>
+        </div>
+
+        <!-- Privacy Assurance & Streak -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--s-12); margin-bottom: var(--s-24);">
+            <div style="display: inline-flex; align-items: center; gap: var(--s-8); font-size: 0.8125rem; color: var(--text-secondary);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span>End-to-end private. Never shared with faculty or administration.</span>
+            </div>
+
+            {% if streak > 0 %}
+            <div style="display: inline-flex; align-items: center; gap: var(--s-6); padding: 4px 12px; background-color: var(--success-soft); border: 1px solid rgba(21, 128, 61, 0.2); border-radius: var(--radius-full); font-size: 0.8rem; font-weight: 600; color: var(--success);">
+                <span>{{ streak }}-day reflection record</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Daily Study Balance Reflection -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <div>
+                    <h3 class="section-card-title">
+                        {% if today_checkin %}Today's Logged Balance{% else %}Daily Study Workload Check-in{% endif %}
+                    </h3>
+                    <p class="text-sm text-secondary">Assess your current study pace, focus, and mental clarity.</p>
+                </div>
+                {% if today_checkin %}
+                <span class="badge badge-active">Recorded Today</span>
+                {% endif %}
+            </div>
+
+            {% if today_checkin %}
+            <div style="display: flex; align-items: center; gap: var(--s-16); padding: var(--s-16); background-color: var(--surface-2); border-radius: var(--radius-sm); margin-bottom: var(--s-20);">
+                <div style="width: 44px; height: 44px; border-radius: var(--radius-sm); background-color: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                    {{ mood_emojis[today_checkin.mood] }}
+                </div>
+                <div>
+                    <div style="font-weight: 600; font-size: 0.95rem; color: var(--text);">{{ mood_labels[today_checkin.mood] }}</div>
+                    {% if today_checkin.note %}
+                    <p class="text-sm text-secondary" style="margin-top: 2px;">{{ today_checkin.note }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('wellbeing.checkin') }}">
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--s-8); margin-bottom: var(--s-20);">
+                    {% for val, label in mood_labels.items() %}
+                    <label style="display: flex; flex-direction: column; align-items: center; gap: var(--s-6); cursor: pointer; padding: var(--s-12) var(--s-8); border: 1px solid var(--border); border-radius: var(--radius-sm); background-color: var(--surface); transition: border-color var(--dur-fast), background-color var(--dur-fast); text-align: center;">
+                        <input type="radio" name="mood" value="{{ val }}" style="display: none;" {% if today_checkin and today_checkin.mood == val %}checked{% elif not today_checkin and val == 3 %}checked{% endif %}>
+                        <span style="font-size: 1.35rem;">{{ mood_emojis[val] }}</span>
+                        <span style="font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);">{{ label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    <label for="note" class="form-label">Private Reflection / Workload Notes (optional)</label>
+                    <textarea name="note" id="note" class="form-input" rows="2" placeholder="Record upcoming assignment stress, exam prep progress, or sleep balance...">{{ today_checkin.note if today_checkin else '' }}</textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end;">
+                    <button type="submit" class="btn btn-primary">
+                        {% if today_checkin %}Update Check-in{% else %}Save Reflection{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 30-Day Workload Trend -->
+        {% if trend | length > 1 %}
+        <div class="section-card">
+            <div class="section-card-header">
+                <h3 class="section-card-title">30-Day Workload Balance History</h3>
+                <span class="text-xs text-muted">Recent reflections</span>
+            </div>
+
+            <div style="height: 140px; display: flex; align-items: flex-end; gap: 6px; padding: var(--s-8) 0;">
+                {% for entry in trend %}
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                    <div style="width: 100%; max-width: 24px; height: {{ entry.mood * 20 }}%; background-color: var(--accent); border-radius: 2px 2px 0 0; min-height: 8px;"></div>
+                    <span style="font-size: 0.6rem; color: var(--text-muted);">{{ entry.date[5:] }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Verified Counseling & Campus Helplines -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <div>
+                    <h3 class="section-card-title">Campus Counseling &amp; Emergency Support</h3>
+                    <p class="text-sm text-secondary">Confidential institutional student support resources.</p>
+                </div>
+            </div>
+
+            <div class="item-list">
+                {% for res in resources %}
+                <div class="item-row">
+                    <div class="item-row-info">
+                        <div class="item-row-title">{{ res.name }}</div>
+                        <div class="item-row-meta">{{ res.description }}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 600; font-size: 0.85rem; color: var(--accent);">{{ res.phone }}</div>
+                        <div class="text-xs text-muted">{{ res.hours }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // Style active mood radio buttons
+    const moodLabels = document.querySelectorAll('label input[name="mood"]');
+    moodLabels.forEach(input => {
+        const updateStyle = () => {
+            moodLabels.forEach(i => {
+                const parent = i.closest('label');
+                if (i.checked) {
+                    parent.style.borderColor = 'var(--accent)';
+                    parent.style.backgroundColor = 'var(--surface-hover)';
+                } else {
+                    parent.style.borderColor = 'var(--border)';
+                    parent.style.backgroundColor = 'var(--surface)';
+                }
+            });
+        };
+        input.addEventListener('change', updateStyle);
+        if (input.checked) updateStyle();
+    });
+</script>
+{% endblock %}

@@ -21,21 +21,21 @@ def send_otp_email(to_email, otp):
 
     print("Brevo sender:", Config.BREVO_FROM_EMAIL)
         
-    subject = "Your UNICRACY Registration OTP"
+    subject = "Your Avora Registration OTP"
     body = f"""
     <html>
         <body>
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-                <h2 style="color: #4a6fa5;">UNICRACY - Campus Elections</h2>
+                <h2 style="color: #2563eb;">Avora - University Platform</h2>
                 <p>Hello,</p>
-                <p>You have requested to register for the UNICRACY election platform. Please use the following One-Time Password (OTP) to complete your registration:</p>
+                <p>You have requested to register for Avora. Please use the following One-Time Password (OTP) to complete your registration:</p>
                 <div style="background-color: #f4f4f4; padding: 15px; text-align: center; border-radius: 5px; margin: 20px 0;">
                     <h1 style="margin: 0; letter-spacing: 5px; color: #333;">{otp}</h1>
                 </div>
                 <p>This OTP is valid for {Config.OTP_EXPIRY_SECONDS // 60} minutes.</p>
                 <p>If you did not request this, please ignore this email.</p>
                 <br>
-                <p>Best regards,<br>The UNICRACY Team</p>
+                <p>Best regards,<br>The Avora Team</p>
             </div>
         </body>
     </html>

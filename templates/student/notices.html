@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Notices &amp; Deadlines | Avora{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+    <button class="mobile-menu-toggle" id="mobile-toggle" aria-label="Toggle navigation menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    {% include 'student/_sidebar.html' %}
+
+    <main class="main-content">
+        <!-- Standard Back Button -->
+        {% include 'components/back_button.html' %}
+
+        <div class="command-header">
+            <span class="overline">University Bulletin</span>
+            <h1 class="command-greeting" style="font-size: 1.75rem;">Notices &amp; Deadlines</h1>
+            <p class="command-subtext">Administrative circulars, department announcements, examination orders, and upcoming deadlines.</p>
+        </div>
+
+        <!-- Section 1: Upcoming Academic Deadlines -->
+        {% if deadlines %}
+        <div class="section-card" style="border-left: 4px solid var(--warning);">
+            <div class="section-card-header">
+                <div style="display: flex; align-items: center; gap: var(--s-8);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <h3 class="section-card-title">Urgent Academic Deadlines</h3>
+                </div>
+                <span class="badge badge-upcoming">{{ deadlines | length }} Pending</span>
+            </div>
+
+            <div class="timeline-strip">
+                {% for d in deadlines %}
+                <div class="timeline-item">
+                    <div class="timeline-date">{{ d.deadline[:10] if d.deadline else 'Schedule' }}</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; font-size: 0.925rem; color: var(--text);">{{ d.title }}</div>
+                        <div class="text-xs text-muted">Category: {{ d.category }} &middot; Due at: {{ d.deadline[11:16] if d.deadline and d.deadline|length > 15 else '23:59' }}</div>
+                    </div>
+                    <span class="badge badge-danger">Due Soon</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Section 2: All University Circulars -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <div>
+                    <h3 class="section-card-title">University Circulars</h3>
+                    <p class="text-sm text-secondary">Authenticated announcements issued by university offices.</p>
+                </div>
+                <span class="badge badge-department">{{ notices | length }} Circulars</span>
+            </div>
+
+            {% if notices %}
+            <div class="item-list">
+                {% for notice in notices %}
+                <article class="item-row" style="flex-direction: column; align-items: stretch; gap: var(--s-12); {% if notice.get('expired') %}opacity: 0.65;{% endif %}">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-16);">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: var(--s-8); margin-bottom: var(--s-6);">
+                                {% if notice.pinned %}
+                                <span class="badge badge-active" style="background-color: var(--accent); color: #ffffff; border-color: var(--accent);">PINNED</span>
+                                {% endif %}
+                                <span class="badge badge-department">{{ notice.category }}</span>
+                                {% if notice.visibility == 'specific' %}
+                                <span class="badge badge-year">Class Scoped</span>
+                                {% endif %}
+                                {% if notice.get('expired') %}
+                                <span class="badge badge-closed">EXPIRED</span>
+                                {% endif %}
+                            </div>
+
+                            <h4 style="font-size: 1.1rem; margin-bottom: var(--s-6); color: var(--text);">{{ notice.title }}</h4>
+
+                            <div class="item-row-meta" style="margin-bottom: var(--s-12);">
+                                <span>Published: {{ notice.created_at.strftime('%b %d, %Y') if notice.created_at else 'Recent' }}</span>
+                                {% if notice.created_by_name %}
+                                <span>&middot;</span>
+                                <span>Office: {{ notice.created_by_name }}</span>
+                                {% endif %}
+                                {% if notice.deadline %}
+                                <span>&middot;</span>
+                                <span style="color: var(--danger); font-weight: 600;">Deadline: {{ notice.deadline[:10] }}</span>
+                                {% endif %}
+                            </div>
+
+                            {% if notice.body %}
+                            <div style="background-color: var(--surface-2); border-left: 3px solid var(--accent); padding: var(--s-12) var(--s-16); border-radius: var(--radius-xs); font-size: 0.875rem; line-height: 1.6; color: var(--text);">
+                                {{ notice.body }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                </div>
+                <h4>No notices posted yet</h4>
+                <p>There are no university notices matching your filters. Check back for campus updates.</p>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+{% endblock %}

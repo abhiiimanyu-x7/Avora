@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block title %}Campus Issues Moderation | Admin | Avora{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+    <button class="mobile-menu-toggle" id="mobile-toggle" aria-label="Toggle navigation menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    {% include 'admin/_sidebar.html' %}
+
+    <main class="main-content page-content">
+        <!-- Standard Back Button -->
+        {% include 'components/back_button.html' %}
+
+        <div class="command-header">
+            <span class="overline">Facilities &amp; Infrastructure Triage</span>
+            <h1 class="command-greeting" style="font-size: 1.75rem;">Campus Issues &amp; Grievance Management</h1>
+            <p class="command-subtext">Review student grievance submissions, track recurring maintenance hotspots, and coordinate facility resolution.</p>
+        </div>
+
+        <!-- 1. High Level Metrics Grid -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-16); margin-bottom: var(--s-24);">
+            <div class="section-card" style="margin-bottom: 0; padding: var(--s-16) var(--s-20);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s-8);">
+                    <span class="text-caption">Total Reports</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+                </div>
+                <div style="font-family: var(--font-display); font-size: 1.85rem; font-weight: 700; color: var(--text);">
+                    {{ hotspots.total }}
+                </div>
+            </div>
+
+            <div class="section-card" style="margin-bottom: 0; padding: var(--s-16) var(--s-20);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s-8);">
+                    <span class="text-caption">Open / Pending</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </div>
+                <div style="font-family: var(--font-display); font-size: 1.85rem; font-weight: 700; color: var(--warning);">
+                    {{ hotspots.open }}
+                </div>
+            </div>
+
+            <div class="section-card" style="margin-bottom: 0; padding: var(--s-16) var(--s-20);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s-8);">
+                    <span class="text-caption">In-Progress</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                </div>
+                <div style="font-family: var(--font-display); font-size: 1.85rem; font-weight: 700; color: var(--accent);">
+                    {{ hotspots.in_progress }}
+                </div>
+            </div>
+
+            <div class="section-card" style="margin-bottom: 0; padding: var(--s-16) var(--s-20);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--s-8);">
+                    <span class="text-caption">Resolved</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div style="font-family: var(--font-display); font-size: 1.85rem; font-weight: 700; color: var(--success);">
+                    {{ hotspots.resolved }}
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Recurring Hotspots & Category Breakdown -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-20); margin-bottom: var(--s-24);">
+            <!-- Hotspots per Category -->
+            <div class="section-card" style="margin-bottom: 0;">
+                <div class="section-card-header">
+                    <div>
+                        <h3 class="section-card-title">Volume by Category</h3>
+                        <p class="text-sm text-secondary">Distribution of grievances across facility domains.</p>
+                    </div>
+                </div>
+                {% if hotspots.by_category %}
+                <div style="display: flex; flex-direction: column; gap: var(--s-10); margin-top: var(--s-12);">
+                    {% for cat_data in hotspots.by_category %}
+                    <div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.875rem; margin-bottom: 4px;">
+                            <span style="font-weight: 600; color: var(--text);">{{ cat_data.category }}</span>
+                            <span class="badge badge-department" style="font-size: 0.7rem;">{{ cat_data.count }} reported</span>
+                        </div>
+                        <div style="width: 100%; height: 6px; background-color: var(--surface-2); border-radius: var(--radius-full); overflow: hidden;">
+                            {% set pct = (cat_data.count / (hotspots.total if hotspots.total > 0 else 1) * 100) | round %}
+                            <div style="width: {{ pct }}%; height: 100%; background-color: var(--accent); border-radius: var(--radius-full);"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-muted" style="padding: var(--s-16) 0;">No category statistics recorded yet.</p>
+                {% endif %}
+            </div>
+
+            <!-- Recurring Hotspots per Location -->
+            <div class="section-card" style="margin-bottom: 0;">
+                <div class="section-card-header">
+                    <div>
+                        <h3 class="section-card-title">Recurring Location Hotspots</h3>
+                        <p class="text-sm text-secondary">Campus zones with highest frequency of issues.</p>
+                    </div>
+                </div>
+                {% if hotspots.by_location %}
+                <div class="item-list" style="margin-top: var(--s-8);">
+                    {% for loc_data in hotspots.by_location[:6] %}
+                    <div class="item-row" style="padding: var(--s-10) var(--s-12);">
+                        <div style="display: flex; align-items: center; gap: var(--s-8);">
+                            <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background-color: var(--surface-2); font-size: 0.75rem; font-weight: 700; color: var(--accent);">
+                                {{ loop.index }}
+                            </span>
+                            <span style="font-weight: 600; font-size: 0.875rem; color: var(--text);">{{ loc_data.location }}</span>
+                        </div>
+                        <span class="badge badge-danger" style="font-size: 0.75rem;">
+                            {{ loc_data.count }} {{ 'case' if loc_data.count == 1 else 'cases' }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-muted" style="padding: var(--s-16) 0;">No recurring location hotspots identified yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 3. Filter Bar -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <h3 class="section-card-title">Triage Queue &amp; Filter Options</h3>
+                <span class="badge badge-department">{{ issues | length }} Matching Issues</span>
+            </div>
+
+            <form method="GET" action="{{ url_for('issues.admin_index') }}" style="display: grid; grid-template-columns: 1fr 1fr 1.5fr auto auto; gap: var(--s-12); align-items: end; margin-top: var(--s-12);">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="status_filter" class="form-label">Status</label>
+                    <select name="status" id="status_filter" class="form-select">
+                        <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All Statuses</option>
+                        {% for st in statuses %}
+                        <option value="{{ st }}" {% if selected_status == st %}selected{% endif %}>{{ st.replace('-', ' ').title() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="cat_filter" class="form-label">Category</label>
+                    <select name="category" id="cat_filter" class="form-select">
+                        <option value="all" {% if selected_category == 'all' %}selected{% endif %}>All Categories</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="loc_filter" class="form-label">Search Location</label>
+                    <input type="text" name="location" id="loc_filter" class="form-input" placeholder="e.g. Block B, Library" value="{{ location_q }}">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="height: 42px;">
+                    Apply Filters
+                </button>
+
+                <a href="{{ url_for('issues.admin_index') }}" class="btn btn-ghost" style="height: 42px; display: inline-flex; align-items: center;">
+                    Reset
+                </a>
+            </form>
+        </div>
+
+        <!-- 4. Issue Queue Triage List -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <div>
+                    <h3 class="section-card-title">Campus Issue Ledger</h3>
+                    <p class="text-sm text-secondary">Verified triage queue. Update statuses and record admin maintenance remarks.</p>
+                </div>
+            </div>
+
+            {% if issues %}
+            <div class="item-list" style="margin-top: var(--s-12);">
+                {% for issue in issues %}
+                <div class="item-row" style="flex-direction: column; align-items: stretch; gap: var(--s-16); padding: var(--s-20); background-color: var(--surface);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-16); flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 280px;">
+                            <div style="display: flex; align-items: center; gap: var(--s-8); margin-bottom: var(--s-8); flex-wrap: wrap;">
+                                <span class="badge badge-department">{{ issue.category }}</span>
+                                <span class="badge badge-year">{{ issue.location }}</span>
+                                {% if issue.status == 'open' %}
+                                <span class="badge badge-upcoming" style="background-color: rgba(245, 158, 11, 0.15); color: #d97706; border-color: rgba(245, 158, 11, 0.3);">OPEN</span>
+                                {% elif issue.status == 'in-progress' %}
+                                <span class="badge badge-active">IN-PROGRESS</span>
+                                {% elif issue.status == 'resolved' %}
+                                <span class="badge badge-voted">RESOLVED</span>
+                                {% endif %}
+                            </div>
+
+                            <h4 style="font-size: 1.15rem; margin-bottom: var(--s-6); color: var(--text);">{{ issue.title }}</h4>
+                            <p class="text-sm text-secondary" style="margin-bottom: var(--s-12); line-height: 1.6;">{{ issue.description }}</p>
+
+                            <!-- Reporter Credentials -->
+                            <div style="display: flex; gap: var(--s-16); flex-wrap: wrap; font-size: 0.8125rem; color: var(--text-muted); background-color: var(--surface-2); padding: var(--s-8) var(--s-12); border-radius: var(--radius-xs);">
+                                <span><strong>Reported by:</strong> {{ issue.reporter_name or 'Student' }}</span>
+                                <span><strong>Roll No:</strong> {{ issue.reporter_roll_no or 'N/A' }}</span>
+                                <span><strong>Dept:</strong> {{ issue.reporter_department or 'General' }}</span>
+                                <span><strong>Contact:</strong> {{ issue.reporter_email or 'N/A' }}</span>
+                                <span><strong>Date:</strong> {{ issue.created_at.strftime('%b %d, %Y %H:%M') if issue.created_at else '' }}</span>
+                            </div>
+
+                            {% if issue.admin_remarks %}
+                            <div style="margin-top: var(--s-10); font-size: 0.85rem; color: var(--text);">
+                                <span style="font-weight: 600; color: var(--accent);">Current Remarks:</span> {{ issue.admin_remarks }}
+                                {% if issue.triaged_by_name %}
+                                <span class="text-xs text-muted"> (by {{ issue.triaged_by_name }})</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div style="text-align: right; min-width: 140px;">
+                            {% if issue.photo_url %}
+                            <div>
+                                <a href="{{ issue.photo_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-xs" style="display: inline-flex; align-items: center; gap: 4px; margin-bottom: var(--s-8);">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                                    View Evidence Photo
+                                </a>
+                            </div>
+                            {% endif %}
+                            <span class="text-xs text-muted" style="display: block;">Last updated: {{ issue.updated_at.strftime('%b %d, %H:%M') if issue.updated_at else '' }}</span>
+                            {% if issue.resolved_at %}
+                            <span class="text-xs text-success" style="display: block; font-weight: 600; margin-top: 2px;">Resolved: {{ issue.resolved_at.strftime('%b %d, %Y') }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Status Transition & Triage Action Form -->
+                    <div style="border-top: 1px solid var(--border-subtle); padding-top: var(--s-12); margin-top: var(--s-4);">
+                        <form method="POST" action="{{ url_for('issues.admin_update_status', issue_id=issue._id) }}" style="display: flex; gap: var(--s-12); align-items: center; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: var(--s-6);">
+                                <label for="st_{{ issue._id }}" class="text-xs" style="font-weight: 600; white-space: nowrap; text-transform: uppercase; color: var(--text-muted);">Set Status:</label>
+                                <select name="status" id="st_{{ issue._id }}" class="form-select" style="padding: var(--s-6) var(--s-12); font-size: 0.8125rem; width: 140px;">
+                                    {% for st in statuses %}
+                                    <option value="{{ st }}" {% if issue.status == st %}selected{% endif %}>{{ st.replace('-', ' ').title() }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div style="flex: 1; min-width: 220px;">
+                                <input type="text" name="admin_remarks" class="form-input" style="padding: var(--s-6) var(--s-12); font-size: 0.8125rem;" placeholder="Maintenance dispatch notes / resolution details..." value="{{ issue.admin_remarks or '' }}">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                Save Triage
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding: var(--s-32);">
+                <div class="empty-state-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <h4>No campus issues found</h4>
+                <p>No issues match the selected status or category filters.</p>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+
+<script>
+    const toggle = document.getElementById('mobile-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar && overlay) {
+        toggle.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('active'); });
+        overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); });
+    }
+</script>
+{% endblock %}

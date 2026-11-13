@@ -1,164 +1,102 @@
-/* ═══════════════════════════════════════════════════════
-   UNICRACY — Vote Page JavaScript
-   Confirmation modal, vote casting, receipt display
-   ═══════════════════════════════════════════════════════ */
-
-let selectedCandidateId = null;
-let selectedCandidateName = null;
-
 /**
- * Open the vote confirmation modal.
+ * Avora - Vote page JS
+ * Handles candidate selection, vote confirmation modal, and submission.
  */
-function openConfirmModal(candidateId, candidateName) {
-    selectedCandidateId = candidateId;
-    selectedCandidateName = candidateName;
-    
-    document.getElementById('modal-candidate-name').textContent = candidateName;
-    document.getElementById('vote-modal').classList.add('active');
-}
 
-/**
- * Close the vote confirmation modal.
- */
-function closeConfirmModal() {
-    document.getElementById('vote-modal').classList.remove('active');
-    selectedCandidateId = null;
-    selectedCandidateName = null;
-}
-
-/**
- * Cast the vote via AJAX.
- */
-function castVote() {
-    if (!selectedCandidateId) return;
-    
-    const btn = document.getElementById('confirm-vote-btn');
-    const spinner = document.getElementById('vote-spinner');
-    
-    // Show loading state
-    btn.classList.add('btn-loading');
-    spinner.classList.remove('hidden');
-    
-    fetch(`/student/vote/${electionId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            candidate_id: selectedCandidateId,
-        }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Close modal
-            closeConfirmModal();
-            
-            // Show receipt
-            showReceipt();
-            
-            // Lock all vote buttons
-            lockAllButtons();
-            
-        } else {
-            // Show error
-            closeConfirmModal();
-            showToast(data.message || 'Failed to cast vote.', 'error');
-        }
-    })
-    .catch(error => {
-        closeConfirmModal();
-        showToast('An error occurred. Please try again.', 'error');
-        console.error('Vote error:', error);
-    })
-    .finally(() => {
-        btn.classList.remove('btn-loading');
-        spinner.classList.add('hidden');
-    });
-}
-
-/**
- * Show the vote receipt overlay.
- */
-function showReceipt() {
-    const now = new Date();
-    const timestamp = now.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-    
-    document.getElementById('receipt-timestamp').textContent = timestamp;
-    document.getElementById('vote-receipt').classList.add('active');
-}
-
-/**
- * Lock all vote buttons after casting a vote.
- */
-function lockAllButtons() {
-    document.querySelectorAll('.vote-btn').forEach(btn => {
-        btn.disabled = true;
-        btn.className = 'btn btn-locked btn-block';
-        btn.innerHTML = `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-            Vote Locked
-        `;
-    });
-}
-
-/**
- * Toggle manifesto text expansion.
- */
-function toggleManifesto(candidateId, fullText) {
-    const el = document.getElementById('manifesto-' + candidateId);
-    const btn = el.nextElementSibling;
-    
-    if (btn.textContent === 'Read More') {
-        el.textContent = fullText;
-        btn.textContent = 'Show Less';
-    } else {
-        el.textContent = fullText.substring(0, 150) + '...';
-        btn.textContent = 'Read More';
-    }
-}
-
-// Close modal on overlay click
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
+    const candidateLabels = document.querySelectorAll('[data-candidate-id]');
+    const voteBtn = document.getElementById('vote-btn');
     const modal = document.getElementById('vote-modal');
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeConfirmModal();
+    const cancelBtn = document.getElementById('vote-cancel');
+    const confirmBtn = document.getElementById('vote-confirm');
+
+    if (!candidateLabels.length || !voteBtn) return;
+
+    let selectedCandidateId = null;
+
+    // Candidate selection
+    candidateLabels.forEach(label => {
+        const radio = label.querySelector('input[type="radio"]');
+        label.addEventListener('click', () => {
+            // Reset all
+            candidateLabels.forEach(l => {
+                l.style.borderColor = 'var(--border)';
+                const check = l.querySelector('.vote-check');
+                if (check) {
+                    check.style.borderColor = 'var(--gray-300)';
+                    check.style.background = 'transparent';
+                    check.innerHTML = '';
+                }
+            });
+
+            // Select this one
+            radio.checked = true;
+            selectedCandidateId = label.getAttribute('data-candidate-id');
+            label.style.borderColor = 'var(--accent)';
+            const check = label.querySelector('.vote-check');
+            if (check) {
+                check.style.borderColor = 'var(--accent)';
+                check.style.background = 'var(--accent)';
+                check.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
             }
+
+            voteBtn.disabled = false;
+        });
+    });
+
+    // Open modal
+    voteBtn.addEventListener('click', () => {
+        if (!selectedCandidateId) return;
+        modal.classList.add('active');
+    });
+
+    // Cancel modal
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            modal.classList.remove('active');
         });
     }
-    
-    // Close receipt on Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeConfirmModal();
-        }
-    });
-});
 
-// Sidebar toggle
-document.addEventListener('DOMContentLoaded', function() {
-    const toggle = document.getElementById('mobile-toggle');
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebar-overlay');
-    
-    if (toggle && sidebar && overlay) {
-        toggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('active');
+    // Close modal on backdrop click
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.classList.remove('active');
         });
-        overlay.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('active');
+    }
+
+    // Confirm vote
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', async () => {
+            if (!selectedCandidateId) return;
+
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Submitting...';
+
+            try {
+                const electionId = window.location.pathname.split('/vote/')[1];
+                const res = await fetch(`/student/vote/${electionId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ candidate_id: selectedCandidateId }),
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('Vote cast successfully!', 'success');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showToast(data.message || 'Failed to cast vote.', 'error');
+                    modal.classList.remove('active');
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = 'Confirm Vote';
+                }
+            } catch (e) {
+                showToast('Network error. Please try again.', 'error');
+                modal.classList.remove('active');
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Confirm Vote';
+            }
         });
     }
 });

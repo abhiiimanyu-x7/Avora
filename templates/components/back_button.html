@@ -1,0 +1,10 @@
+<!-- Reusable Standardized Avora Back Button Component -->
+<div class="back-button-bar">
+    <a href="{{ url | default(url_for('student.dashboard') if session.get('user_role') == 'student' else (url_for('admin.dashboard') if session.get('user_role') == 'admin' else url_for('landing'))) }}" class="back-button" id="back-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>{{ label | default('Back') }}</span>
+    </a>
+</div>

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   UNICRACY — Results Page JavaScript
+   AVORA - Results Page JavaScript
    Progress bar animations using Intersection Observer
    ═══════════════════════════════════════════════════════ */
 

@@ -9,7 +9,7 @@ def get_db():
 
 
 def create_election(data):
-    """Create a new election."""
+    """Create a new election with optional scheduling."""
     db = get_db()
     
     election = {
@@ -19,6 +19,8 @@ def create_election(data):
         'department': data.get('department', 'All Departments'),
         'start_date': data.get('start_date', ''),
         'end_date': data.get('end_date', ''),
+        'scheduled_start': data.get('scheduled_start'),  # ISO datetime string
+        'scheduled_end': data.get('scheduled_end'),      # ISO datetime string
         'status': 'upcoming',
         'created_at': datetime.utcnow(),
         'created_by': data.get('created_by'),
@@ -29,25 +31,84 @@ def create_election(data):
     return election
 
 
+def resolve_election_status(election):
+    """Auto-transition election status based on scheduled times.
+    Called on every read. Mutates the election dict in place and
+    writes the new status back to the database if it changed.
+
+    Status flow: upcoming -> active -> closed
+    """
+    if not election:
+        return election
+
+    now = datetime.utcnow()
+    current_status = election.get('status', 'upcoming')
+    new_status = current_status
+
+    scheduled_start = election.get('scheduled_start')
+    scheduled_end = election.get('scheduled_end')
+
+    try:
+        if scheduled_start:
+            start_dt = datetime.fromisoformat(scheduled_start)
+        else:
+            start_dt = None
+        if scheduled_end:
+            end_dt = datetime.fromisoformat(scheduled_end)
+        else:
+            end_dt = None
+    except (ValueError, TypeError):
+        return election
+
+    if end_dt and now >= end_dt:
+        new_status = 'closed'
+    elif start_dt and now >= start_dt:
+        new_status = 'active'
+
+    if new_status != current_status:
+        db = get_db()
+        db.elections.update_one(
+            {'_id': election['_id']},
+            {'$set': {'status': new_status}},
+        )
+        election['status'] = new_status
+
+    return election
+
+
 def get_all_elections():
-    """Return all elections, sorted by created_at descending."""
+    """Return all elections, sorted by created_at descending.
+    Resolves status on read for each election.
+    """
     db = get_db()
-    return list(db.elections.find().sort('created_at', -1))
+    elections = list(db.elections.find().sort('created_at', -1))
+    for e in elections:
+        resolve_election_status(e)
+    return elections
 
 
 def get_election_by_id(election_id):
-    """Get a single election by its ObjectId."""
+    """Get a single election by its ObjectId, with status resolved."""
     db = get_db()
     try:
-        return db.elections.find_one({'_id': ObjectId(election_id)})
+        election = db.elections.find_one({'_id': ObjectId(election_id)})
+        return resolve_election_status(election)
     except Exception:
         return None
 
 
 def get_elections_by_status(status):
-    """Filter elections by status (upcoming, active, closed)."""
+    """Filter elections by status (upcoming, active, closed).
+    Resolves all statuses first, then filters.
+    """
     db = get_db()
-    return list(db.elections.find({'status': status}).sort('created_at', -1))
+    elections = list(db.elections.find().sort('created_at', -1))
+    resolved = []
+    for e in elections:
+        resolve_election_status(e)
+        if e['status'] == status:
+            resolved.append(e)
+    return resolved
 
 
 def activate_election(election_id):
@@ -108,6 +169,9 @@ def get_election_stats():
     """Get aggregate stats for admin dashboard."""
     db = get_db()
     
+    # Resolve all statuses first
+    get_all_elections()
+
     total_elections = db.elections.count_documents({})
     active_elections = db.elections.count_documents({'status': 'active'})
     upcoming_elections = db.elections.count_documents({'status': 'upcoming'})

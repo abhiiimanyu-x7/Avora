@@ -1,0 +1,343 @@
+{% extends 'base.html' %}
+
+{% block title %}Campus Map &amp; Spatial Reference | Avora{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+.map-viewer-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--s-20);
+    margin-bottom: var(--s-24);
+    box-shadow: var(--shadow-sm);
+}
+
+.map-viewport-container {
+    position: relative;
+    width: 100%;
+    height: 600px;
+    background-color: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    cursor: grab;
+    user-select: none;
+}
+
+.map-viewport-container:active {
+    cursor: grabbing;
+}
+
+.map-content-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+    transition: transform 0.05s linear;
+}
+
+.map-survey-image {
+    display: block;
+    max-width: none;
+    height: 1200px;
+    width: auto;
+    pointer-events: none;
+}
+
+/* Floating Controls */
+.map-controls-panel {
+    position: absolute;
+    bottom: var(--s-16);
+    right: var(--s-16);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 30;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px;
+    box-shadow: var(--shadow-md);
+}
+
+.map-ctrl-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xs);
+    color: var(--text);
+    cursor: pointer;
+    transition: background-color var(--dur-fast);
+}
+
+.map-ctrl-btn:hover {
+    background-color: var(--border);
+    color: var(--accent);
+}
+
+/* Building Cards */
+.building-map-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--s-16);
+    transition: transform var(--dur-fast), border-color var(--dur-fast);
+    cursor: pointer;
+}
+
+.building-map-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.building-map-card.highlighted {
+    border-color: var(--accent) !important;
+    background-color: var(--surface-2);
+    box-shadow: 0 0 0 2px var(--accent-muted);
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+    <button class="mobile-menu-toggle" id="mobile-toggle" aria-label="Toggle navigation menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    {% include 'student/_sidebar.html' %}
+
+    <main class="main-content">
+        <!-- Standard Back Button -->
+        {% include 'components/back_button.html' %}
+
+        <div class="command-header">
+            <span class="overline">University Spatial Directory</span>
+            <h1 class="command-greeting" style="font-size: 1.75rem;">Campus Map &amp; Navigation</h1>
+            <p class="command-subtext">Verified topographical survey layout (17/11/2024), spatial coordinates, and facility directory across KMCLU Lucknow.</p>
+        </div>
+
+        <!-- Topographical Map Viewer -->
+        <div class="map-viewer-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s-12); flex-wrap: wrap; gap: var(--s-8);">
+                <div>
+                    <h3 class="section-card-title">KMCLU Topographical Survey (University at a Glance)</h3>
+                    <p class="text-xs text-muted">Sitapur-Hardoi Bypass Road, Lucknow &middot; Drag to pan &middot; Scroll to zoom</p>
+                </div>
+                
+                <div style="display: flex; gap: var(--s-8); align-items: center;">
+                    <a href="{{ url_for('static', filename='images/kmclu_survey_map.png') }}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm" style="font-size: 0.75rem; padding: 4px 10px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                        <span>Full Resolution</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Legend Strip -->
+            <div style="display: flex; gap: var(--s-12); flex-wrap: wrap; margin-bottom: var(--s-12); padding-bottom: var(--s-8); border-bottom: 1px solid var(--border);">
+                {% for type_id, type_info in building_types.items() %}
+                <div style="display: flex; align-items: center; gap: 5px; font-size: 0.72rem; color: var(--text-secondary);">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background-color: {{ type_info.color }};"></span>
+                    <span>{{ type_info.label }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Interactive Pan/Zoom Viewport -->
+            <div class="map-viewport-container" id="map-viewport">
+                <div class="map-content-layer" id="map-layer">
+                    <img src="{{ url_for('static', filename='images/kmclu_survey_map.png') }}" alt="KMCLU Topographical Survey Map" class="map-survey-image" id="map-img">
+                </div>
+
+                <!-- Floating Controls -->
+                <div class="map-controls-panel">
+                    <button class="map-ctrl-btn" id="ctrl-zoom-in" title="Zoom In" aria-label="Zoom In">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    </button>
+                    <button class="map-ctrl-btn" id="ctrl-zoom-out" title="Zoom Out" aria-label="Zoom Out">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    </button>
+                    <button class="map-ctrl-btn" id="ctrl-reset" title="Reset View" aria-label="Reset View">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Facilities & Office Directory -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <div>
+                    <h3 class="section-card-title">Facilities &amp; Office Directory</h3>
+                    <p class="text-sm text-secondary">Verified inventory of campus structures and coordinates. Click any building to locate it on the survey map.</p>
+                </div>
+                <input type="text" id="map-search" placeholder="Filter buildings or zones..." class="form-input" style="max-width: 240px; padding: 6px 12px; font-size: 0.825rem; margin: 0;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--s-16);" id="buildings-grid">
+                {% for b in buildings %}
+                {% set btype = building_types.get(b.type, {}) %}
+                <div class="building-map-card" id="card-{{ b.id }}" style="border-left: 3px solid {{ btype.get('color', 'var(--border-strong)') }};" data-id="{{ b.id }}" data-top="{{ b.coords.top }}" data-left="{{ b.coords.left }}" data-name="{{ b.name | lower }}" data-zone="{{ b.zone | lower }}" data-desc="{{ b.description | lower }}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s-6);">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background-color: {{ btype.get('color', 'var(--accent)') }};"></span>
+                            <span class="text-caption" style="color: {{ btype.get('color', 'var(--text-muted)') }}; font-weight: 600;">{{ btype.get('label', b.type) }}</span>
+                        </div>
+                        <span class="badge badge-department" style="font-size: 0.65rem;">{{ b.zone }}</span>
+                    </div>
+                    <h4 style="font-size: 0.975rem; margin-bottom: var(--s-4);">{{ b.name }}</h4>
+                    <p class="text-sm text-secondary" style="line-height: 1.45;">{{ b.description }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const viewport = document.getElementById('map-viewport');
+    const layer = document.getElementById('map-layer');
+    const img = document.getElementById('map-img');
+    const zoomInBtn = document.getElementById('ctrl-zoom-in');
+    const zoomOutBtn = document.getElementById('ctrl-zoom-out');
+    const resetBtn = document.getElementById('ctrl-reset');
+    const searchInput = document.getElementById('map-search');
+    const cards = document.querySelectorAll('.building-map-card');
+
+    let scale = 0.55;
+    let panX = 0;
+    let panY = -50;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+
+    function updateTransform() {
+        layer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    }
+
+    // Initial centering
+    if (img.complete) {
+        initPosition();
+    } else {
+        img.onload = initPosition;
+    }
+
+    function initPosition() {
+        const vpRect = viewport.getBoundingClientRect();
+        scale = Math.max(vpRect.width / 1300, 0.5);
+        panX = (vpRect.width - (920 * scale)) / 2;
+        panY = -80 * scale;
+        updateTransform();
+    }
+
+    // Pan with mouse drag
+    viewport.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.map-controls-panel')) return;
+        isDragging = true;
+        startX = e.clientX - panX;
+        startY = e.clientY - panY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        panX = e.clientX - startX;
+        panY = e.clientY - startY;
+        updateTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+        isDragging = false;
+    });
+
+    // Zoom on wheel
+    viewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
+        const newScale = Math.min(Math.max(scale * zoomFactor, 0.35), 2.2);
+
+        const rect = viewport.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        panX = mouseX - (mouseX - panX) * (newScale / scale);
+        panY = mouseY - (mouseY - panY) * (newScale / scale);
+        scale = newScale;
+        updateTransform();
+    }, { passive: false });
+
+    // Zoom Controls
+    zoomInBtn.addEventListener('click', () => {
+        scale = Math.min(scale * 1.25, 2.2);
+        updateTransform();
+    });
+
+    zoomOutBtn.addEventListener('click', () => {
+        scale = Math.max(scale * 0.8, 0.35);
+        updateTransform();
+    });
+
+    resetBtn.addEventListener('click', () => {
+        initPosition();
+    });
+
+    // Facility focus interaction
+    function focusBuilding(id) {
+        cards.forEach(c => c.classList.remove('highlighted'));
+        const targetCard = document.getElementById(`card-${id}`);
+
+        if (targetCard) {
+            targetCard.classList.add('highlighted');
+            targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            const leftPct = parseFloat(targetCard.getAttribute('data-left')) / 100;
+            const topPct = parseFloat(targetCard.getAttribute('data-top')) / 100;
+
+            if (!isNaN(leftPct) && !isNaN(topPct)) {
+                const imgW = img.offsetWidth || 920;
+                const imgH = img.offsetHeight || 1200;
+                const vpRect = viewport.getBoundingClientRect();
+                scale = Math.max(scale, 0.95);
+                panX = (vpRect.width / 2) - (leftPct * imgW * scale);
+                panY = (vpRect.height / 2) - (topPct * imgH * scale);
+                updateTransform();
+            }
+        }
+    }
+
+    cards.forEach(card => {
+        card.addEventListener('click', () => {
+            const id = card.getAttribute('data-id');
+            focusBuilding(id);
+            viewport.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    });
+
+    // Directory Search
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase().trim();
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name');
+                const zone = card.getAttribute('data-zone');
+                const desc = card.getAttribute('data-desc');
+                if (name.includes(q) || zone.includes(q) || desc.includes(q)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

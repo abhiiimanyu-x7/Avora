@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}Contacts | Admin | Avora{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+    <button class="mobile-menu-toggle" id="mobile-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    {% include 'admin/_sidebar.html' %}
+
+    <main class="main-content page-content">
+        {% include 'components/back_button.html' %}
+        <h2 style="margin-bottom: var(--space-24);">Campus Contacts</h2>
+
+        <!-- Add Contact -->
+        <div class="section-card">
+            <h3 class="section-card-title" style="margin-bottom: var(--space-16);">Add Contact</h3>
+            <form method="POST" action="{{ url_for('contacts.admin_add') }}">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-16);">
+                    <div class="form-group">
+                        <input type="text" name="name" class="form-input" placeholder=" " required>
+                        <label class="form-label">Name</label>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="designation" class="form-input" placeholder=" ">
+                        <label class="form-label">Designation</label>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-16);">
+                    <div class="form-group">
+                        <input type="text" name="department" class="form-input" placeholder=" ">
+                        <label class="form-label">Department</label>
+                    </div>
+                    <div class="form-group">
+                        <select name="category" class="form-select">
+                            {% for cat in categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                        <label class="form-select-label">Category</label>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-16);">
+                    <div class="form-group">
+                        <input type="text" name="phone" class="form-input" placeholder=" ">
+                        <label class="form-label">Phone</label>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" name="email" class="form-input" placeholder=" ">
+                        <label class="form-label">Email</label>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-16);">
+                    <div class="form-group">
+                        <input type="text" name="office_location" class="form-input" placeholder=" ">
+                        <label class="form-label">Office Location</label>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="office_hours" class="form-input" placeholder=" ">
+                        <label class="form-label">Office Hours</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Contact</button>
+            </form>
+        </div>
+
+        <!-- Contacts Table -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <h3 class="section-card-title">All Contacts</h3>
+                <span class="badge badge-department">{{ contacts | length }}</span>
+            </div>
+            {% if contacts %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in contacts %}
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600;">{{ c.name }}</div>
+                            {% if c.designation %}<div class="text-xs text-muted">{{ c.designation }}</div>{% endif %}
+                        </td>
+                        <td class="text-sm">{{ c.category }}</td>
+                        <td class="text-sm">{{ c.phone or '-' }}</td>
+                        <td class="text-sm">{{ c.email or '-' }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('contacts.admin_delete', contact_id=c._id) }}" onsubmit="return confirm('Delete this contact?')">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state"><h4>No contacts added yet</h4></div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+<script>
+    const toggle = document.getElementById('mobile-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    toggle.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('active'); });
+    overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); });
+</script>
+{% endblock %}

@@ -10,8 +10,10 @@ from services.vote_service import (
 )
 from services.user_service import (
     get_total_students, change_admin_password, get_user_by_id,
-    create_admin_user, get_all_admins, get_user_by_email
+    create_admin_user, get_all_admins, get_user_by_email, admin_has_scope,
+    get_system_setting, set_system_setting
 )
+from services.audit_service import log_action, get_recent_logs
 from config import Config
 
 admin_bp = Blueprint('admin', __name__)
@@ -28,24 +30,43 @@ def admin_required(f):
     return decorated
 
 
+def scope_required(scope):
+    """Decorator factory: require admin to have a specific service scope."""
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            user = get_user_by_id(session.get('user_id'))
+            if not admin_has_scope(user, scope):
+                flash(f'You do not have access to the {scope} service.', 'error')
+                return redirect(url_for('admin.dashboard'))
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
+
+
 @admin_bp.route('/admin/dashboard')
 @admin_required
 def dashboard():
-    """Admin dashboard — the Election Control Room."""
+    """Admin dashboard."""
     stats = get_election_stats()
     recent_activity = get_recent_votes(limit=10)
     elections = get_all_elections()
     total_students = get_total_students()
+    user = get_user_by_id(session['user_id'])
+    recent_logs = get_recent_logs(limit=10)
     
     return render_template('admin/dashboard.html',
                            stats=stats,
                            recent_activity=recent_activity,
                            elections=elections,
-                           total_students=total_students)
+                           total_students=total_students,
+                           admin_user=user,
+                           recent_logs=recent_logs)
 
 
 @admin_bp.route('/admin/elections')
 @admin_required
+@scope_required('elections')
 def elections():
     """All elections management list."""
     all_elections = get_all_elections()
@@ -59,8 +80,9 @@ def elections():
 
 @admin_bp.route('/admin/election/create', methods=['GET', 'POST'])
 @admin_required
+@scope_required('elections')
 def create_election_route():
-    """Create a new election."""
+    """Create a new election with scheduling."""
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         post_name = request.form.get('post_name', '').strip()
@@ -68,6 +90,8 @@ def create_election_route():
         department = request.form.get('department', 'All Departments')
         start_date = request.form.get('start_date', '')
         end_date = request.form.get('end_date', '')
+        scheduled_start = request.form.get('scheduled_start', '').strip() or None
+        scheduled_end = request.form.get('scheduled_end', '').strip() or None
         
         if not title or not post_name:
             flash('Title and Post Name are required.', 'error')
@@ -82,9 +106,14 @@ def create_election_route():
             'department': department,
             'start_date': start_date,
             'end_date': end_date,
+            'scheduled_start': scheduled_start,
+            'scheduled_end': scheduled_end,
             'created_by': session['user_id'],
         })
         
+        log_action(session['user_id'], session.get('user_name', ''),
+                   'created_election', 'election', election['_id'],
+                   {'title': title})
         flash('Election created successfully!', 'success')
         return redirect(url_for('admin.elections'))
     
@@ -94,6 +123,7 @@ def create_election_route():
 
 @admin_bp.route('/admin/election/<election_id>/candidates', methods=['GET', 'POST'])
 @admin_required
+@scope_required('elections')
 def manage_candidates(election_id):
     """View and add candidates to an election."""
     election = get_election_by_id(election_id)
@@ -120,6 +150,9 @@ def manage_candidates(election_id):
                 'manifesto': manifesto,
                 'symbol': symbol,
             })
+            log_action(session['user_id'], session.get('user_name', ''),
+                       'added_candidate', 'election', election_id,
+                       {'candidate_name': name})
             flash(f'Candidate "{name}" added successfully!', 'success')
         
         return redirect(url_for('admin.manage_candidates', election_id=election_id))
@@ -135,6 +168,7 @@ def manage_candidates(election_id):
 
 @admin_bp.route('/admin/election/<election_id>/results')
 @admin_required
+@scope_required('elections')
 def election_results(election_id):
     """View election results (admin view with extra stats)."""
     election = get_election_by_id(election_id)
@@ -159,6 +193,7 @@ def election_results(election_id):
 
 @admin_bp.route('/admin/election/<election_id>/activate', methods=['POST'])
 @admin_required
+@scope_required('elections')
 def activate_election_route(election_id):
     """Activate an election."""
     election = get_election_by_id(election_id)
@@ -174,6 +209,8 @@ def activate_election_route(election_id):
             flash('An election needs at least 2 candidates to be activated.', 'error')
         else:
             activate_election(election_id)
+            log_action(session['user_id'], session.get('user_name', ''),
+                       'activated_election', 'election', election_id)
             flash(f'Election "{election["title"]}" is now ACTIVE!', 'success')
     
     return redirect(url_for('admin.elections'))
@@ -181,6 +218,7 @@ def activate_election_route(election_id):
 
 @admin_bp.route('/admin/election/<election_id>/close', methods=['POST'])
 @admin_required
+@scope_required('elections')
 def close_election_route(election_id):
     """Close an election."""
     election = get_election_by_id(election_id)
@@ -192,6 +230,8 @@ def close_election_route(election_id):
         flash('Only active elections can be closed.', 'error')
     else:
         close_election(election_id)
+        log_action(session['user_id'], session.get('user_name', ''),
+                   'closed_election', 'election', election_id)
         flash(f'Election "{election["title"]}" has been CLOSED.', 'success')
     
     return redirect(url_for('admin.elections'))
@@ -199,6 +239,7 @@ def close_election_route(election_id):
 
 @admin_bp.route('/admin/election/<election_id>/candidate/<candidate_id>/delete', methods=['POST'])
 @admin_required
+@scope_required('elections')
 def delete_candidate_route(election_id, candidate_id):
     """Delete a candidate from an election."""
     election = get_election_by_id(election_id)
@@ -210,6 +251,8 @@ def delete_candidate_route(election_id, candidate_id):
         flash('Cannot modify candidates of an active or closed election.', 'error')
     else:
         delete_candidate(candidate_id)
+        log_action(session['user_id'], session.get('user_name', ''),
+                   'deleted_candidate', 'election', election_id)
         flash('Candidate removed.', 'success')
     
     return redirect(url_for('admin.manage_candidates', election_id=election_id))
@@ -220,6 +263,10 @@ def delete_candidate_route(election_id, candidate_id):
 def profile():
     """Admin profile page with password change."""
     user = get_user_by_id(session['user_id'])
+    if not user:
+        session.clear()
+        flash('Session expired or admin not found. Please log in again.', 'warning')
+        return redirect(url_for('auth.admin_login'))
 
     if request.method == 'POST':
         current_password = request.form.get('current_password', '')
@@ -256,8 +303,9 @@ def change_password():
 @admin_bp.route('/admin/manage-admins', methods=['GET', 'POST'])
 @admin_required
 def manage_admins():
-    """Manage admin users (create and list teacher/admin users)."""
-    if session.get('is_teacher'):
+    """Manage admin users (create and list admin users with scoped roles)."""
+    user = get_user_by_id(session['user_id'])
+    if user.get('admin_scope') != 'all':
         flash('Access denied. Only super administrators can manage admin accounts.', 'error')
         return redirect(url_for('admin.dashboard'))
 
@@ -267,6 +315,10 @@ def manage_admins():
         password = request.form.get('password', '')
         confirm_password = request.form.get('confirm_password', '')
         is_teacher = request.form.get('is_teacher') == 'on' or request.form.get('is_teacher') == 'true'
+        admin_scope = request.form.get('admin_scope', 'all')
+        
+        if admin_scope not in Config.ADMIN_SCOPES:
+            admin_scope = 'all'
         
         if not all([name, email, password, confirm_password]):
             flash('All fields are required.', 'error')
@@ -281,10 +333,67 @@ def manage_admins():
                 'name': name,
                 'email': email,
                 'password': password,
-                'is_teacher': is_teacher
+                'is_teacher': is_teacher,
+                'admin_scope': admin_scope,
             })
+            log_action(session['user_id'], session.get('user_name', ''),
+                       'created_admin', 'admin', None,
+                       {'name': name, 'email': email, 'scope': admin_scope})
             flash('New admin user created successfully!', 'success')
             return redirect(url_for('admin.manage_admins'))
             
     admins = get_all_admins()
-    return render_template('admin/manage_admins.html', admins=admins)
+    return render_template('admin/manage_admins.html',
+                           admins=admins,
+                           admin_scopes=Config.ADMIN_SCOPES)
+
+
+@admin_bp.route('/admin/audit-log')
+@admin_required
+def audit_log():
+    """View the admin audit log."""
+    user = get_user_by_id(session['user_id'])
+    if user.get('admin_scope') != 'all':
+        flash('Access denied.', 'error')
+        return redirect(url_for('admin.dashboard'))
+    logs = get_recent_logs(limit=100)
+    return render_template('admin/audit_log.html', logs=logs)
+
+
+@admin_bp.route('/admin/settings', methods=['GET', 'POST'])
+@admin_required
+def settings():
+    """Manage platform settings including registration domain policies."""
+    user = get_user_by_id(session['user_id'])
+    if user.get('admin_scope') != 'all':
+        flash('Access denied. Only super administrators can modify system settings.', 'error')
+        return redirect(url_for('admin.dashboard'))
+
+    if request.method == 'POST':
+        allow_any_email = request.form.get('allow_any_email') == 'on'
+        prev_value = get_system_setting('allow_any_email', False)
+        
+        set_system_setting('allow_any_email', allow_any_email, updated_by=session['user_id'])
+        
+        log_action(
+            session['user_id'],
+            session.get('user_name', ''),
+            'updated_system_settings',
+            'settings',
+            None,
+            {
+                'setting': 'allow_any_email',
+                'previous_value': prev_value,
+                'new_value': allow_any_email
+            }
+        )
+        
+        policy_label = "open to all email addresses" if allow_any_email else "restricted to @kmclu.ac.in institutional emails only"
+        flash(f'Registration policy successfully updated: Now {policy_label}.', 'success')
+        return redirect(url_for('admin.settings'))
+
+    current_allow_any = get_system_setting('allow_any_email', False)
+    return render_template('admin/settings.html',
+                           allow_any_email=current_allow_any,
+                           admin_user=user)
+

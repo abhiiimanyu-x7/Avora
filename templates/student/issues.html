@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Campus Issues &amp; Grievances | Avora{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+    <button class="mobile-menu-toggle" id="mobile-toggle" aria-label="Toggle navigation menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    {% include 'student/_sidebar.html' %}
+
+    <main class="main-content">
+        <!-- Standard Back Button -->
+        {% include 'components/back_button.html' %}
+
+        <div class="command-header">
+            <span class="overline">Campus Facility &amp; Infrastructure Oversight</span>
+            <h1 class="command-greeting" style="font-size: 1.75rem;">Campus Issues &amp; Grievance Desk</h1>
+            <p class="command-subtext">Report maintenance faults, water/power disruptions, or IT outages across university grounds. University administration reviews and triages all reports.</p>
+        </div>
+
+        <!-- Section 1: Submit Issue Report Form -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <div>
+                    <h3 class="section-card-title">Report a Campus Issue</h3>
+                    <p class="text-sm text-secondary">Submit accurate location coordinates and details to expedite facility resolution.</p>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('issues.submit_report') }}" enctype="multipart/form-data" style="margin-top: var(--s-16);">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-16);">
+                    <div class="form-group">
+                        <label for="category" class="form-label">Issue Category *</label>
+                        <select name="category" id="category" class="form-select" required>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location" class="form-label">Campus Location *</label>
+                        <input type="text" name="location" id="location" class="form-input" placeholder="e.g. Block B Room 204, Library 1st Floor, Hostel Mess" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="title" class="form-label">Brief Summary (Optional)</label>
+                    <input type="text" name="title" id="title" class="form-input" placeholder="e.g. Ceiling fan not working, Water cooler leaking">
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="form-label">Detailed Description *</label>
+                    <textarea name="description" id="description" class="form-input" rows="3" placeholder="Provide specific context: when the fault started, exact room or wing, severity, and any safety hazards." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="photo" class="form-label">Attach Photo (Optional)</label>
+                    <input type="file" name="photo" id="photo" class="form-input" accept="image/*" style="padding: var(--s-8) var(--s-12); font-size: 0.875rem;">
+                    <span class="text-xs text-muted" style="display: block; margin-top: var(--s-4);">Supported formats: JPG, PNG, WEBP, GIF. Max file size: 5MB.</span>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: var(--s-16);">
+                    <button type="submit" class="btn btn-primary">
+                        Submit Issue Report
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Section 2: My Reported Issues -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <div>
+                    <h3 class="section-card-title">My Reported Issues</h3>
+                    <p class="text-sm text-secondary">Verified tracking ledger for grievances submitted under your student account.</p>
+                </div>
+                <span class="badge badge-department">{{ my_issues | length }} Reports</span>
+            </div>
+
+            {% if my_issues %}
+            <div class="item-list">
+                {% for issue in my_issues %}
+                <article class="item-row" style="flex-direction: column; align-items: stretch; gap: var(--s-12);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-16); flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <div style="display: flex; align-items: center; gap: var(--s-8); margin-bottom: var(--s-6); flex-wrap: wrap;">
+                                <span class="badge badge-department">{{ issue.category }}</span>
+                                <span class="badge badge-year">{{ issue.location }}</span>
+                                {% if issue.status == 'open' %}
+                                <span class="badge badge-upcoming" style="background-color: rgba(245, 158, 11, 0.15); color: #d97706; border-color: rgba(245, 158, 11, 0.3);">OPEN</span>
+                                {% elif issue.status == 'in-progress' %}
+                                <span class="badge badge-active">IN-PROGRESS</span>
+                                {% elif issue.status == 'resolved' %}
+                                <span class="badge badge-voted">RESOLVED</span>
+                                {% endif %}
+                            </div>
+
+                            <h4 style="font-size: 1.05rem; margin-bottom: var(--s-4); color: var(--text);">{{ issue.title }}</h4>
+                            <p class="text-sm text-secondary" style="margin-bottom: var(--s-8); line-height: 1.5;">{{ issue.description }}</p>
+
+                            {% if issue.admin_remarks %}
+                            <div style="background-color: var(--surface-2); border-left: 3px solid var(--accent); padding: var(--s-8) var(--s-12); border-radius: var(--radius-xs); margin-top: var(--s-8);">
+                                <span style="font-weight: 600; font-size: 0.75rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 2px;">Admin Triage Remarks</span>
+                                <p class="text-sm" style="margin: 0; color: var(--text);">{{ issue.admin_remarks }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div style="text-align: right; min-width: 140px;">
+                            <div class="text-xs text-muted">Reported: {{ issue.created_at.strftime('%b %d, %Y') if issue.created_at else '' }}</div>
+                            {% if issue.resolved_at %}
+                            <div class="text-xs text-success" style="font-weight: 600; margin-top: 4px;">Resolved: {{ issue.resolved_at.strftime('%b %d, %Y') }}</div>
+                            {% endif %}
+                            {% if issue.photo_url %}
+                            <div style="margin-top: var(--s-8);">
+                                <a href="{{ issue.photo_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-xs" style="display: inline-flex; align-items: center; gap: 4px;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                                    View Photo
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding: var(--s-24);">
+                <div class="empty-state-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+                <h4>No issues reported by you</h4>
+                <p>You have not logged any facility grievances yet. If you encounter broken equipment or campus issues, report them above.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Section 3: Campus Status Bulletin -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <div>
+                    <h3 class="section-card-title">Campus-Wide Maintenance Bulletin</h3>
+                    <p class="text-sm text-secondary">Active maintenance cases reported across university departments.</p>
+                </div>
+                <span class="badge badge-year">{{ campus_issues | length }} Campus Total</span>
+            </div>
+
+            {% if campus_issues %}
+            <div class="item-list">
+                {% for c_issue in campus_issues[:6] %}
+                <div class="item-row" style="background-color: var(--surface);">
+                    <div class="item-row-info">
+                        <div style="display: flex; align-items: center; gap: var(--s-8); margin-bottom: 2px;">
+                            <span style="font-weight: 600; font-size: 0.925rem; color: var(--text);">{{ c_issue.title }}</span>
+                            <span class="badge badge-department" style="font-size: 0.65rem;">{{ c_issue.category }}</span>
+                        </div>
+                        <div class="item-row-meta">
+                            <span>Location: {{ c_issue.location }}</span>
+                            <span>&middot;</span>
+                            <span>Reported: {{ c_issue.created_at.strftime('%b %d') if c_issue.created_at else '' }}</span>
+                        </div>
+                    </div>
+                    <div>
+                        {% if c_issue.status == 'open' %}
+                        <span class="badge badge-upcoming">OPEN</span>
+                        {% elif c_issue.status == 'in-progress' %}
+                        <span class="badge badge-active">IN-PROGRESS</span>
+                        {% elif c_issue.status == 'resolved' %}
+                        <span class="badge badge-voted">RESOLVED</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding: var(--s-20);">
+                <p>No campus maintenance issues currently on record.</p>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+{% endblock %}

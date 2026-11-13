@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Audit Log | Avora{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+    <button class="mobile-menu-toggle" id="mobile-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    {% include 'admin/_sidebar.html' %}
+
+    <main class="main-content page-content">
+        {% include 'components/back_button.html' %}
+        <h2 style="margin-bottom: var(--space-24);">Audit Log</h2>
+
+        <div class="section-card">
+            <p class="text-sm text-muted" style="margin-bottom: var(--space-16);">Every admin action is logged here. Entries are retained for 90 days.</p>
+            {% if logs %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>When</th>
+                        <th>Admin</th>
+                        <th>Action</th>
+                        <th>Target</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td class="text-sm">{{ log.timestamp.strftime('%b %d, %H:%M') if log.timestamp else '-' }}</td>
+                        <td class="text-sm" style="font-weight: 600;">{{ log.admin_name }}</td>
+                        <td class="text-sm"><span class="badge badge-department">{{ log.action }}</span></td>
+                        <td class="text-sm">{{ log.target_type }}</td>
+                        <td class="text-xs text-muted">{{ log.details | tojson if log.details else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <h4>No audit entries yet</h4>
+                <p>Admin actions will appear here as they happen.</p>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+<script>
+    const toggle = document.getElementById('mobile-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    toggle.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('active'); });
+    overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); });
+</script>
+{% endblock %}

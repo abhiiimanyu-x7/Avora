@@ -28,7 +28,11 @@ def student_required(f):
 @student_bp.route('/student/dashboard')
 @student_required
 def dashboard():
-    """Student dashboard with election overview."""
+    """Student dashboard campus command center."""
+    from services.notices_service import get_upcoming_deadlines, get_active_notices
+    from services.lost_found_service import get_all_found_items
+    from datetime import datetime
+
     active = get_elections_by_status('active')
     upcoming = get_elections_by_status('upcoming')
     closed = get_elections_by_status('closed')
@@ -39,11 +43,31 @@ def dashboard():
     
     for election in closed:
         election['has_voted'] = has_voted(session['user_id'], str(election['_id']))
-    
+
+    user = get_user_by_id(session['user_id'])
+    student_dept = user.get('department') if user else session.get('user_department')
+    student_year = user.get('year') if user else session.get('user_year')
+
+    deadlines = get_upcoming_deadlines(limit=5, student_dept=student_dept, student_year=student_year)
+    recent_notices = get_active_notices(student_dept=student_dept, student_year=student_year)[:4]
+    recent_found = get_all_found_items(status='unclaimed')[:3]
+
+    hour = datetime.now().hour
+    if hour < 12:
+        greeting_time = "Good morning"
+    elif hour < 17:
+        greeting_time = "Good afternoon"
+    else:
+        greeting_time = "Good evening"
+
     return render_template('student/dashboard.html',
                            active_elections=active,
                            upcoming_elections=upcoming,
-                           closed_elections=closed)
+                           closed_elections=closed,
+                           deadlines=deadlines,
+                           recent_notices=recent_notices,
+                           recent_found=recent_found,
+                           greeting_time=greeting_time)
 
 
 @student_bp.route('/student/elections')
@@ -127,10 +151,13 @@ def results(election_id):
 def profile():
     """Student profile page."""
     user = get_user_by_id(session['user_id'])
+    if not user:
+        session.clear()
+        flash('Session expired or user not found. Please log in again.', 'warning')
+        return redirect(url_for('auth.student_login'))
     
     if request.method == 'POST':
-        # Check if this is a profile update or password change
-        form_type = request.form.get('form_type', 'profile')
+        form_type = request.form.get('form_type', '')
 
         if form_type == 'password':
             current_password = request.form.get('current_password', '')
@@ -146,32 +173,26 @@ def profile():
                 flash(result['message'], 'success' if result['success'] else 'error')
 
             return redirect(url_for('student.profile'))
-
         else:
-            # Profile update
-            name = request.form.get('name', '').strip()
-            department = request.form.get('department', '')
-            year = request.form.get('year', '')
-
-            if name:
-                updated_user = update_profile(session['user_id'], {
-                    'name': name,
-                    'department': department,
-                    'year': year,
-                })
-                session['user_name'] = updated_user['name']
-                session['user_department'] = updated_user.get('department', '')
-                session['user_year'] = updated_user.get('year', '')
-                flash('Profile updated successfully.', 'success')
-            else:
-                flash('Name is required.', 'error')
-
+            flash('Core registration details (name, roll number, department, year) are institutional credentials and cannot be edited by students. Please contact the Registrar office for changes.', 'error')
             return redirect(url_for('student.profile'))
-    
+
+    from services.lost_found_service import get_user_reports, get_user_claims
+    from services.notification_service import get_user_notifications
+    from services.issue_service import get_user_issues
+
     voting_history = get_user_voting_history(session['user_id'])
-    
+    user_reports = get_user_reports(session['user_id'])
+    user_claims = get_user_claims(session['user_id'])
+    notifications = get_user_notifications(session['user_id'], limit=10)
+    user_issues = get_user_issues(session['user_id'])
+
     return render_template('student/profile.html',
                            user=user,
                            voting_history=voting_history,
+                           user_reports=user_reports,
+                           user_claims=user_claims,
+                           user_issues=user_issues,
+                           notifications=notifications,
                            departments=Config.DEPARTMENTS,
                            years=Config.YEARS)

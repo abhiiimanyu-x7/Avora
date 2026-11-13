@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block title %}Notices | Admin | Avora{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+    <button class="mobile-menu-toggle" id="mobile-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    {% include 'admin/_sidebar.html' %}
+
+    <main class="main-content page-content">
+        {% include 'components/back_button.html' %}
+        <h2 style="margin-bottom: var(--space-24);">Notices & Deadlines</h2>
+
+        <!-- Create Notice -->
+        <div class="section-card">
+            <h3 class="section-card-title" style="margin-bottom: var(--space-16);">Post a Notice</h3>
+            <form method="POST" action="{{ url_for('notices.admin_create') }}">
+                <div class="form-group">
+                    <input type="text" name="title" class="form-input" placeholder=" " required>
+                    <label class="form-label">Notice Title</label>
+                </div>
+                <div class="form-group">
+                    <textarea name="body" class="form-input" placeholder=" " rows="3"></textarea>
+                    <label class="form-label">Notice Body</label>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-16);">
+                    <div class="form-group">
+                        <select name="category" class="form-select">
+                            {% for cat in categories %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                        <label class="form-select-label">Category</label>
+                    </div>
+                    <div class="form-group">
+                        <input type="datetime-local" name="deadline" class="form-input" placeholder=" ">
+                        <label class="form-label">Deadline (optional)</label>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: var(--space-8); padding-top: var(--space-8);">
+                        <input type="checkbox" name="pinned" id="pinned" style="width: 16px; height: 16px;">
+                        <label for="pinned" class="text-sm" style="cursor: pointer;">Pin to top</label>
+                    </div>
+                </div>
+                <!-- Audience Visibility Options -->
+                <div style="margin-top: var(--space-16); padding-top: var(--space-16); border-top: 1px solid var(--border-subtle);">
+                    <label class="form-label" style="display: block; margin-bottom: var(--s-8); font-weight: 600;">Audience Visibility</label>
+                    <div style="display: flex; gap: var(--space-16); align-items: center; margin-bottom: var(--space-12);">
+                        <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.875rem;">
+                            <input type="radio" name="visibility" value="all" checked onchange="toggleAudienceOptions(this.value)">
+                            <span>All students</span>
+                        </label>
+                        <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.875rem;">
+                            <input type="radio" name="visibility" value="specific" onchange="toggleAudienceOptions(this.value)">
+                            <span>Specific department(s) / year(s)</span>
+                        </label>
+                    </div>
+
+                    <div id="specific-audience-box" style="display: none; background-color: var(--surface-2); padding: var(--s-16); border-radius: var(--radius-sm); margin-bottom: var(--space-16);">
+                        <div style="margin-bottom: var(--s-12);">
+                            <span class="text-xs text-muted" style="display: block; font-weight: 600; text-transform: uppercase; margin-bottom: var(--s-6);">Target Departments (Select all applicable, leave unselected for all)</span>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--s-6); max-height: 180px; overflow-y: auto; padding: var(--s-8); border: 1px solid var(--border-subtle); border-radius: var(--radius-xs); background-color: var(--surface);">
+                                {% for dept in departments %}
+                                <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8125rem; cursor: pointer; padding: 2px 4px;">
+                                    <input type="checkbox" name="target_departments" value="{{ dept }}">
+                                    <span>{{ dept }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="text-xs text-muted" style="display: block; font-weight: 600; text-transform: uppercase; margin-bottom: var(--s-6);">Target Academic Years (Select all applicable, leave unselected for all)</span>
+                            <div style="display: flex; gap: var(--s-16); flex-wrap: wrap;">
+                                {% for yr in years %}
+                                <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8125rem; cursor: pointer;">
+                                    <input type="checkbox" name="target_years" value="{{ yr }}">
+                                    <span>{{ yr }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Post Notice</button>
+            </form>
+        </div>
+
+        <!-- All Notices -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <h3 class="section-card-title">All Notices</h3>
+                <span class="badge badge-department">{{ notices | length }}</span>
+            </div>
+            {% if notices %}
+            <div class="item-list">
+                {% for notice in notices %}
+                <div class="item-row">
+                    <div class="item-row-info">
+                        <div style="display: flex; align-items: center; gap: var(--s-8); margin-bottom: 2px; flex-wrap: wrap;">
+                            <span class="item-row-title" style="margin-bottom: 0;">{% if notice.pinned %}📌 {% endif %}{{ notice.title }}</span>
+                            {% if notice.visibility == 'specific' %}
+                            <span class="badge badge-year" style="font-size: 0.65rem;">
+                                Scoped: {% if notice.target_departments %}{{ notice.target_departments | join(', ') }}{% else %}All Depts{% endif %}{% if notice.target_years %} ({{ notice.target_years | join(', ') }}){% endif %}
+                            </span>
+                            {% else %}
+                            <span class="badge badge-department" style="font-size: 0.65rem;">All Students</span>
+                            {% endif %}
+                        </div>
+                        <div class="item-row-meta">
+                            {{ notice.category }} · {{ notice.created_by_name or 'Admin' }} · {{ notice.created_at.strftime('%b %d, %Y') if notice.created_at else '' }}
+                            {% if notice.deadline %} · Deadline: {{ notice.deadline[:16] }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="item-row-actions">
+                        <form method="POST" action="{{ url_for('notices.admin_toggle_pin', notice_id=notice._id) }}">
+                            <button type="submit" class="btn btn-ghost btn-sm">{% if notice.pinned %}Unpin{% else %}Pin{% endif %}</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('notices.admin_delete', notice_id=notice._id) }}" onsubmit="return confirm('Delete this notice?')">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state"><h4>No notices posted yet</h4></div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+<script>
+    function toggleAudienceOptions(val) {
+        const box = document.getElementById('specific-audience-box');
+        if (box) {
+            box.style.display = (val === 'specific') ? 'block' : 'none';
+        }
+    }
+    const toggle = document.getElementById('mobile-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    toggle.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('active'); });
+    overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); });
+</script>
+{% endblock %}

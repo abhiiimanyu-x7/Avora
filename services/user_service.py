@@ -146,7 +146,7 @@ def change_student_password(user_id, current_password, new_password):
 
 
 def create_admin_user(data):
-    """Create a new admin user (e.g. teacher)."""
+    """Create a new admin user with a service scope."""
     db = get_db()
     
     admin = {
@@ -155,6 +155,7 @@ def create_admin_user(data):
         'password_hash': generate_password_hash(data['password']),
         'role': 'admin',
         'is_teacher': data.get('is_teacher', False),
+        'admin_scope': data.get('admin_scope', 'all'),  # which service they can manage
         'created_at': datetime.utcnow(),
     }
     
@@ -167,3 +168,45 @@ def get_all_admins():
     """Get all users with the admin role."""
     db = get_db()
     return list(db.users.find({'role': 'admin'}))
+
+
+def admin_has_scope(user, scope):
+    """Check if an admin user has access to a given service scope.
+
+    Super-admins (scope='all') can access everything.
+    """
+    if not user or user.get('role') != 'admin':
+        return False
+    user_scope = user.get('admin_scope', 'all')
+    return user_scope == 'all' or user_scope == scope
+
+
+def get_system_setting(key, default=None):
+    """Get a system configuration setting from the database."""
+    try:
+        db = get_db()
+        doc = db.settings.find_one({'key': key})
+        if doc and 'value' in doc:
+            return doc['value']
+    except Exception:
+        pass
+    return default
+
+
+def set_system_setting(key, value, updated_by=None):
+    """Set a system configuration setting in the database."""
+    db = get_db()
+    db.settings.update_one(
+        {'key': key},
+        {
+            '$set': {
+                'key': key,
+                'value': value,
+                'updated_at': datetime.utcnow(),
+                'updated_by': updated_by,
+            }
+        },
+        upsert=True
+    )
+    return value
+

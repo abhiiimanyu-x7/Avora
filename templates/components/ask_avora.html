@@ -1,0 +1,57 @@
+<!-- Ask Avora Floating Launcher and Slide-in Panel Component -->
+<button class="ask-avora-launcher" id="ask-avora-launcher" title="Ask Avora Assistant" aria-label="Open Ask Avora Assistant">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>
+    <span>Ask Avora</span>
+</button>
+
+<div class="ask-avora-panel-overlay" id="ask-avora-overlay"></div>
+
+<aside class="ask-avora-panel" id="ask-avora-panel" aria-label="Ask Avora Assistant Panel">
+    <div class="ask-avora-header">
+        <div class="ask-avora-header-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 16v-4"></path>
+                <path d="M12 8h.01"></path>
+            </svg>
+            <div>
+                <h3>Ask Avora</h3>
+                <span class="text-caption" style="display: block; font-size: 0.65rem;">KMCLU Knowledge Assistant</span>
+            </div>
+        </div>
+        <button class="ask-avora-close" id="ask-avora-close" aria-label="Close Assistant">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    <div class="ask-avora-messages" id="ask-avora-messages">
+        <div class="ask-avora-msg ask-avora-msg-bot">
+            Hello! I am Avora, your campus knowledge assistant. Ask me about KMCLU programmes, fees, admissions, library hours, student committees (NSS, NCC, SGRC), or current campus elections and notices.
+        </div>
+    </div>
+
+    <div style="padding: 8px 16px; background-color: var(--surface-2); border-top: 1px solid var(--border); display: flex; gap: 6px; overflow-x: auto;">
+        <button type="button" class="badge badge-department" style="cursor: pointer; background: var(--surface); border: 1px solid var(--border); white-space: nowrap;" onclick="document.getElementById('ask-avora-input').value='How to join NSS'; document.getElementById('ask-avora-form').dispatchEvent(new Event('submit'));">Join NSS</button>
+        <button type="button" class="badge badge-department" style="cursor: pointer; background: var(--surface); border: 1px solid var(--border); white-space: nowrap;" onclick="document.getElementById('ask-avora-input').value='BTech fees'; document.getElementById('ask-avora-form').dispatchEvent(new Event('submit'));">BTech Fees</button>
+        <button type="button" class="badge badge-department" style="cursor: pointer; background: var(--surface); border: 1px solid var(--border); white-space: nowrap;" onclick="document.getElementById('ask-avora-input').value='Library timings'; document.getElementById('ask-avora-form').dispatchEvent(new Event('submit'));">Library Hours</button>
+        <button type="button" class="badge badge-department" style="cursor: pointer; background: var(--surface); border: 1px solid var(--border); white-space: nowrap;" onclick="document.getElementById('ask-avora-input').value='Active elections'; document.getElementById('ask-avora-form').dispatchEvent(new Event('submit'));">Elections</button>
+        <button type="button" class="badge badge-department" style="cursor: pointer; background: var(--surface); border: 1px solid var(--border); white-space: nowrap;" onclick="document.getElementById('ask-avora-input').value='Who is the Proctor?'; document.getElementById('ask-avora-form').dispatchEvent(new Event('submit'));">Proctor Office</button>
+    </div>
+
+    <div class="ask-avora-footer">
+        <form class="ask-avora-form" id="ask-avora-form">
+            <input type="text" class="ask-avora-input" id="ask-avora-input" placeholder="Ask about campus services or rules..." required autocomplete="off">
+            <button type="submit" class="btn btn-primary btn-sm" id="ask-avora-send">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </form>
+    </div>
+</aside>

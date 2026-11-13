@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Review Claims | {{ item.title }} | Avora{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+    <button class="mobile-menu-toggle" id="mobile-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    {% include 'admin/_sidebar.html' %}
+
+    <main class="main-content page-content">
+        {% include 'components/back_button.html' %}
+        <h2 style="margin-bottom: var(--space-4);">{{ item.title }}</h2>
+        <p class="text-secondary text-sm" style="margin-bottom: var(--space-8);">{{ item.category }} · {{ item.location_found or 'Location not specified' }}</p>
+        <div style="background: var(--gray-50); padding: var(--space-12); border-radius: var(--radius-md); margin-bottom: var(--space-24); font-size: 0.875rem;">
+            <strong>Verification:</strong> Q: "{{ item.verification_question }}" / Expected A: "{{ item.verification_answer }}"
+        </div>
+
+        <div class="section-card">
+            <h3 class="section-card-title" style="margin-bottom: var(--space-16);">Claims ({{ claims | length }})</h3>
+            {% if claims %}
+            <div class="item-list">
+                {% for claim in claims %}
+                <div class="item-row" style="flex-direction: column; align-items: stretch;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="item-row-info">
+                            <div class="item-row-title">{{ claim.claimant_name }}</div>
+                            <div class="item-row-meta">{{ claim.claimant_contact }} · Submitted {{ claim.submitted_at.strftime('%b %d, %H:%M') if claim.submitted_at else '' }}</div>
+                        </div>
+                        <span class="badge {% if claim.status == 'approved' %}badge-active{% elif claim.status == 'rejected' %}badge-closed{% else %}badge-upcoming{% endif %}">{{ claim.status }}</span>
+                    </div>
+                    <div style="margin-top: var(--space-8); padding: var(--space-8); background: var(--gray-50); border-radius: var(--radius-sm); font-size: 0.875rem;">
+                        <strong>Their answer:</strong> "{{ claim.answer }}"
+                        {% if claim.answer == item.verification_answer %}
+                        <span style="color: var(--green); font-weight: 600; margin-left: var(--space-8);">✓ Match</span>
+                        {% else %}
+                        <span style="color: var(--red); font-weight: 600; margin-left: var(--space-8);">✗ No match</span>
+                        {% endif %}
+                    </div>
+                    {% if claim.status == 'pending' %}
+                    <div style="display: flex; gap: var(--space-8); margin-top: var(--space-12);">
+                        <form method="POST" action="{{ url_for('lost_found.admin_approve_claim', claim_id=claim._id) }}">
+                            <button type="submit" class="btn btn-primary btn-sm">Approve</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('lost_found.admin_reject_claim', claim_id=claim._id) }}">
+                            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state"><h4>No claims submitted yet</h4></div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+<script>
+    const toggle = document.getElementById('mobile-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    toggle.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('active'); });
+    overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); });
+</script>
+{% endblock %}

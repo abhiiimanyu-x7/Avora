@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% block title %}Platform Settings | Administration | Avora{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+/* Clean Toggle Switch Styles */
+.setting-switch-card {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--s-20);
+    padding: var(--s-20);
+    background-color: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--s-20);
+    box-shadow: 0 2px 6px rgba(180, 150, 70, 0.04);
+}
+
+.switch-label-group {
+    flex: 1;
+}
+
+.switch-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: var(--s-8);
+    margin-bottom: var(--s-4);
+}
+
+.switch-description {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+.toggle-switch-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.toggle-switch-wrapper input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: var(--border-strong);
+    transition: background-color var(--dur-fast);
+    border-radius: var(--radius-full);
+}
+
+.toggle-slider::before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #ffffff;
+    transition: transform var(--dur-fast);
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+input:checked + .toggle-slider {
+    background-color: var(--accent);
+}
+
+input:checked + .toggle-slider::before {
+    transform: translateX(22px);
+}
+
+input:focus-visible + .toggle-slider {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.policy-info-box {
+    border-left: 4px solid var(--accent);
+    background-color: var(--surface);
+    border-top: 1px solid var(--border-strong);
+    border-right: 1px solid var(--border-strong);
+    border-bottom: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: var(--s-16);
+    margin-top: var(--s-16);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    box-shadow: 0 2px 6px rgba(180, 150, 70, 0.04);
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+    <button class="mobile-menu-toggle" id="mobile-toggle" aria-label="Toggle navigation menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    {% include 'admin/_sidebar.html' %}
+
+    <main class="main-content page-content">
+        {% include 'components/back_button.html' %}
+
+        <div class="command-header">
+            <span class="overline">System Governance</span>
+            <h1 class="command-greeting" style="font-size: 1.75rem;">Platform Settings &amp; Access Controls</h1>
+            <p class="command-subtext">Manage student enrollment restrictions, email validation rules, and deployment policies.</p>
+        </div>
+
+        <!-- Student Registration Policy Card -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <div>
+                    <h3 class="section-card-title">Registration &amp; Authentication Policy</h3>
+                    <p class="text-sm text-secondary" style="margin-top: 2px;">Control who is eligible to register student accounts on the Avora university portal.</p>
+                </div>
+                {% if allow_any_email %}
+                <span class="badge badge-active">Open Registration Active</span>
+                {% else %}
+                <span class="badge badge-department">Institutional Only (@kmclu.ac.in)</span>
+                {% endif %}
+            </div>
+
+            <form method="POST" action="{{ url_for('admin.settings') }}">
+                <div class="setting-switch-card">
+                    <div class="switch-label-group">
+                        <label for="allow_any_email" class="switch-title" style="cursor: pointer;">
+                            <span>Allow Any Email to Register</span>
+                        </label>
+                        <p class="switch-description">
+                            When enabled, students can sign up and verify accounts using any valid email address (e.g. personal Gmail, Yahoo, Outlook, or institutional). When disabled, registration strictly requires a verified university <code>@kmclu.ac.in</code> email address.
+                        </p>
+                    </div>
+                    <label class="toggle-switch-wrapper" for="allow_any_email" title="Toggle open email registration">
+                        <input type="checkbox" name="allow_any_email" id="allow_any_email" {% if allow_any_email %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="policy-info-box">
+                    <strong style="color: var(--text); display: block; margin-bottom: 4px;">Institutional Note:</strong>
+                    {% if allow_any_email %}
+                    Currently, <strong>any email domain is accepted</strong>. Students without active <code>@kmclu.ac.in</code> Google Workspace mailboxes can create verified profiles and participate in portal services. You can turn this off at any time to re-enforce strict institutional domain validation.
+                    {% else %}
+                    Currently, <strong>registration is strictly limited to <code>@kmclu.ac.in</code></strong>. Only users with official university email accounts can receive verification OTPs or link their institutional Google accounts.
+                    {% endif %}
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: var(--s-20);">
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>Save Policy Changes</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Deployment & Platform Environment Status -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <h3 class="section-card-title">Production Environment &amp; Hosting Architecture</h3>
+                <span class="badge badge-active">Render Ready</span>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s-16);">
+                <div style="background-color: var(--surface-2); padding: var(--s-16); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                    <span class="text-caption">Host Platform</span>
+                    <div style="font-weight: 600; font-size: 0.95rem; margin-top: 4px; color: var(--text);">Render Web Service</div>
+                    <div class="text-xs text-muted" style="margin-top: 2px;">Gunicorn WSGI + ProxyFix</div>
+                </div>
+
+                <div style="background-color: var(--surface-2); padding: var(--s-16); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                    <span class="text-caption">Database Cluster</span>
+                    <div style="font-weight: 600; font-size: 0.95rem; margin-top: 4px; color: var(--text);">MongoDB Atlas / Replica Set</div>
+                    <div class="text-xs text-muted" style="margin-top: 2px;">Indexed Collections &amp; TTL Expiries</div>
+                </div>
+
+                <div style="background-color: var(--surface-2); padding: var(--s-16); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                    <span class="text-caption">Static File Optimization</span>
+                    <div style="font-weight: 600; font-size: 0.95rem; margin-top: 4px; color: var(--text);">WhiteNoise Enabled</div>
+                    <div class="text-xs text-muted" style="margin-top: 2px;">High-concurrency caching</div>
+                </div>
+
+                <div style="background-color: var(--surface-2); padding: var(--s-16); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                    <span class="text-caption">Audit Retention</span>
+                    <div style="font-weight: 600; font-size: 0.95rem; margin-top: 4px; color: var(--text);">90 Days Automated TTL</div>
+                    <div class="text-xs text-muted" style="margin-top: 2px;">Cryptographic administrative logs</div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+<script>
+    const toggle = document.getElementById('mobile-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    if (toggle && sidebar && overlay) {
+        toggle.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('active'); });
+        overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); });
+    }
+</script>
+{% endblock %}
+

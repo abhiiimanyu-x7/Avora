@@ -24,6 +24,10 @@ build/
 .DS_Store
 Thumbs.db
 
+# Scratch and test files
+scratch/
+tests/scratch/
+
 # Flask
 instance/
 *.db

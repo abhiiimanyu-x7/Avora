@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+
+{% block title %}Lost &amp; Found Desk | Avora{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+    <button class="mobile-menu-toggle" id="mobile-toggle" aria-label="Toggle navigation menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    {% include 'student/_sidebar.html' %}
+
+    <main class="main-content">
+        <!-- Standard Back Button -->
+        {% include 'components/back_button.html' %}
+
+        <div class="command-header">
+            <span class="overline">Campus Property Registry</span>
+            <h1 class="command-greeting" style="font-size: 1.75rem;">Lost &amp; Found Desk</h1>
+            <p class="command-subtext">Report lost or found items, verify ownership through custom challenge questions, and track verified returns.</p>
+        </div>
+
+        <!-- How Verification Works Banner -->
+        <div style="background-color: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--s-16) var(--s-20); margin-bottom: var(--s-24); font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+            <strong style="color: var(--text);">How Avora Verification Works:</strong> When you report a found item, you specify a private question only the real owner can answer (e.g. wallpaper description, inside engraving, lock pattern). The claimant submits their answer, which is reviewed and cleared by university administrative staff before custody handover.
+        </div>
+
+        <!-- Report Forms: Tab switcher between Found and Lost -->
+        <div class="section-card" x-data="{ reportTab: 'found' }">
+            <div class="section-card-header" style="flex-direction: column; align-items: stretch; gap: var(--s-12);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 class="section-card-title">Report an Item</h3>
+                </div>
+                <div style="display: flex; gap: var(--s-8);">
+                    <button type="button" class="btn btn-sm"
+                            :class="reportTab === 'found' ? 'btn-primary' : ''"
+                            @click="reportTab = 'found'"
+                            style="font-size: 0.8rem;">
+                        I Found Something
+                    </button>
+                    <button type="button" class="btn btn-sm"
+                            :class="reportTab === 'lost' ? 'btn-primary' : ''"
+                            @click="reportTab = 'lost'"
+                            style="font-size: 0.8rem;">
+                        I Lost Something
+                    </button>
+                </div>
+            </div>
+
+            <!-- Found Item Form -->
+            <div x-show="reportTab === 'found'" x-transition>
+                <form method="POST" action="{{ url_for('lost_found.report_item') }}">
+                    <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--s-16);">
+                        <div class="form-group">
+                            <label for="found-title" class="form-label">Item Name</label>
+                            <input type="text" name="title" id="found-title" class="form-input" placeholder="e.g. Blue HP Scientific Calculator" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="found-category" class="form-label">Category</label>
+                            <select name="category" id="found-category" class="form-select" required>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}">{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="found-description" class="form-label">General Description (avoid revealing identifying marks)</label>
+                        <textarea name="description" id="found-description" class="form-input" rows="2" placeholder="Found on the 2nd floor corridor bench near room 204."></textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-16);">
+                        <div class="form-group">
+                            <label for="found-location" class="form-label">Location Found</label>
+                            <input type="text" name="location_found" id="found-location" class="form-input" placeholder="e.g. Central Library 1st Floor" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="found-date" class="form-label">Date Discovered</label>
+                            <input type="date" name="date_found" id="found-date" class="form-input" required>
+                        </div>
+                    </div>
+
+                    <div style="background-color: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--s-16); margin-bottom: var(--s-20);">
+                        <div class="overline" style="margin-bottom: var(--s-8);">Ownership Verification Challenge</div>
+                        <div class="form-group">
+                            <label for="verification_question" class="form-label">Verification Question (visible to claimant)</label>
+                            <input type="text" name="verification_question" id="verification_question" class="form-input" placeholder="e.g. What color is the keychain attached to the ring?" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="verification_answer" class="form-label">Expected Answer (confidential to admin reviewer)</label>
+                            <input type="text" name="verification_answer" id="verification_answer" class="form-input" placeholder="e.g. Red brass bell" required>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end;">
+                        <button type="submit" class="btn btn-primary">
+                            Register Found Item
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Lost Item Form -->
+            <div x-show="reportTab === 'lost'" x-transition>
+                <form method="POST" action="{{ url_for('lost_found.report_lost') }}">
+                    <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--s-16);">
+                        <div class="form-group">
+                            <label for="lost-title" class="form-label">Item Name</label>
+                            <input type="text" name="title" id="lost-title" class="form-input" placeholder="e.g. Black Leather Wallet" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lost-category" class="form-label">Category</label>
+                            <select name="category" id="lost-category" class="form-select" required>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}">{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lost-description" class="form-label">Description (distinguishing details to help identify)</label>
+                        <textarea name="description" id="lost-description" class="form-input" rows="2" placeholder="Black leather wallet with a small tear on the left side. Contains student ID."></textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-16);">
+                        <div class="form-group">
+                            <label for="lost-location" class="form-label">Last Seen Location</label>
+                            <input type="text" name="location_lost" id="lost-location" class="form-input" placeholder="e.g. SFC Canteen, 2nd Floor">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lost-date" class="form-label">Date Lost (approximate)</label>
+                            <input type="date" name="date_lost" id="lost-date" class="form-input">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end;">
+                        <button type="submit" class="btn btn-primary">
+                            Report Lost Item
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Section 2: Items Listing with Filters -->
+        <div class="section-card">
+            <div class="section-card-header" style="flex-direction: column; align-items: stretch; gap: var(--s-12);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--s-8);">
+                    <div>
+                        <h3 class="section-card-title">Campus Property Registry</h3>
+                        <p class="text-sm text-secondary">Browse lost and found items or submit an ownership claim.</p>
+                    </div>
+                    <span class="badge badge-department">{{ items | length }} Items</span>
+                </div>
+
+                <!-- Filter Bar -->
+                <div style="display: flex; gap: var(--s-8); flex-wrap: wrap; align-items: center;">
+                    <a href="{{ url_for('lost_found.index') }}"
+                       class="btn btn-sm {{ 'btn-primary' if current_type == 'all' else '' }}"
+                       style="font-size: 0.78rem;">All</a>
+                    <a href="{{ url_for('lost_found.index', type='lost') }}"
+                       class="btn btn-sm {{ 'btn-primary' if current_type == 'lost' else '' }}"
+                       style="font-size: 0.78rem;">Lost</a>
+                    <a href="{{ url_for('lost_found.index', type='found') }}"
+                       class="btn btn-sm {{ 'btn-primary' if current_type == 'found' else '' }}"
+                       style="font-size: 0.78rem;">Found</a>
+
+                    <form method="GET" action="{{ url_for('lost_found.index') }}" style="display: flex; gap: var(--s-6); margin-left: auto;">
+                        {% if current_type != 'all' %}
+                        <input type="hidden" name="type" value="{{ current_type }}">
+                        {% endif %}
+                        <input type="text" name="q" value="{{ search_query }}" placeholder="Search items..."
+                               class="form-input" style="padding: 5px 10px; font-size: 0.8rem; min-width: 140px;">
+                        <button type="submit" class="btn btn-sm btn-primary" style="font-size: 0.78rem;">Search</button>
+                    </form>
+                </div>
+            </div>
+
+            {% if items %}
+            <div class="item-list">
+                {% for item in items %}
+                <div class="item-row" style="flex-direction: column; align-items: stretch; gap: var(--s-12);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-16);">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: var(--s-8); margin-bottom: var(--s-4);">
+                                {% if item.type == 'lost' %}
+                                <span class="badge" style="background: var(--red, #e74c3c); color: #fff; font-size: 0.68rem; padding: 2px 8px;">LOST</span>
+                                {% else %}
+                                <span class="badge badge-active" style="font-size: 0.68rem; padding: 2px 8px;">FOUND</span>
+                                {% endif %}
+                                <span class="badge badge-year">{{ item.category }}</span>
+                            </div>
+                            <h4 style="font-size: 1.05rem; margin-bottom: var(--s-4);">{{ item.title }}</h4>
+                            {% if item.description %}
+                            <p class="text-sm text-secondary" style="margin-bottom: var(--s-6);">{{ item.description }}</p>
+                            {% endif %}
+                            <div class="item-row-meta">
+                                <span>{{ 'Last seen at' if item.type == 'lost' else 'Found at' }}: <strong>{{ item.location or 'Campus premises' }}</strong></span>
+                                <span>&middot;</span>
+                                <span>Date: {{ item.date or 'Recorded' }}</span>
+                                <span>&middot;</span>
+                                <span>Reported by: {{ item.reporter_name or 'Student' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if item.type == 'found' and item.reported_by != session.user_id %}
+                    <div style="background-color: var(--surface-2); border-top: 1px solid var(--border); padding: var(--s-12) var(--s-16); margin-top: var(--s-4); border-radius: var(--radius-xs);">
+                        <form method="POST" action="{{ url_for('lost_found.claim_item', item_id=item._id) }}" style="display: flex; flex-direction: column; gap: var(--s-8);">
+                            <div style="font-size: 0.825rem; font-weight: 600; color: var(--text);">
+                                Verification Question: <span style="font-weight: 400; color: var(--text-secondary);">{{ item.verification_question }}</span>
+                            </div>
+                            <div style="display: flex; gap: var(--s-8);">
+                                <input type="text" name="answer" placeholder="Your specific answer..." class="form-input" style="padding: 7px 12px; font-size: 0.85rem;" required>
+                                <button type="submit" class="btn btn-primary btn-sm" style="white-space: nowrap;">
+                                    Submit Claim
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    {% elif item.type == 'found' and item.reported_by == session.user_id %}
+                    <div style="border-top: 1px solid var(--border-subtle); padding-top: var(--s-8);">
+                        <span class="text-caption" style="color: var(--accent);">Item logged by your account</span>
+                    </div>
+                    {% elif item.type == 'lost' and item.reported_by == session.user_id %}
+                    <div style="border-top: 1px solid var(--border-subtle); padding-top: var(--s-8);">
+                        <span class="text-caption" style="color: var(--accent);">Your lost report</span>
+                    </div>
+                    {% elif item.type == 'lost' %}
+                    <div style="border-top: 1px solid var(--border-subtle); padding-top: var(--s-8);">
+                        <span class="text-caption text-secondary">If you've found this item, report it using the form above.</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </div>
+                <h4>Nothing reported</h4>
+                <p>No lost or found items are currently awaiting resolution on the campus registry.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Section 3: My Reports & Claims -->
+        {% if my_reports or my_lost_reports or my_claims %}
+        <div class="section-card">
+            <div class="section-card-header">
+                <h3 class="section-card-title">Your Property History</h3>
+            </div>
+
+            {% if my_reports %}
+            <div style="margin-bottom: var(--s-16);">
+                <div class="overline" style="margin-bottom: var(--s-8);">Found Items You Logged</div>
+                <div class="item-list">
+                    {% for rep in my_reports %}
+                    <div class="item-row">
+                        <div class="item-row-info">
+                            <div class="item-row-title">{{ rep.title }}</div>
+                            <div class="item-row-meta">{{ rep.category }} &middot; Found: {{ rep.location_found }}</div>
+                        </div>
+                        <span class="badge badge-{{ 'active' if rep.status == 'unclaimed' else ('closed' if rep.status == 'claimed' else 'upcoming') }}">
+                            {{ rep.status | upper }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if my_lost_reports %}
+            <div style="margin-bottom: var(--s-16);">
+                <div class="overline" style="margin-bottom: var(--s-8);">Lost Items You Reported</div>
+                <div class="item-list">
+                    {% for rep in my_lost_reports %}
+                    <div class="item-row">
+                        <div class="item-row-info">
+                            <div class="item-row-title">{{ rep.title }}</div>
+                            <div class="item-row-meta">{{ rep.category }} &middot; Last seen: {{ rep.location_lost or 'Not specified' }}</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: var(--s-8);">
+                            <span class="badge badge-{{ 'active' if rep.status == 'open' else 'closed' }}">
+                                {{ rep.status | upper }}
+                            </span>
+                            {% if rep.status == 'open' %}
+                            <form method="POST" action="{{ url_for('lost_found.close_lost', report_id=rep._id) }}" style="margin: 0;">
+                                <button type="submit" class="btn btn-sm" style="font-size: 0.72rem; padding: 2px 8px;" title="Mark as resolved">Close</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if my_claims %}
+            <div>
+                <div class="overline" style="margin-bottom: var(--s-8);">Claims You Submitted</div>
+                <div class="item-list">
+                    {% for clm in my_claims %}
+                    <div class="item-row">
+                        <div class="item-row-info">
+                            <div class="item-row-title">Claim for Item ID: {{ clm.item_id[:8] }}...</div>
+                            <div class="item-row-meta">Your answer: "{{ clm.answer }}"</div>
+                        </div>
+                        <span class="badge badge-{{ 'active' if clm.status == 'approved' else ('danger' if clm.status == 'rejected' else 'upcoming') }}">
+                            {{ clm.status | upper }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

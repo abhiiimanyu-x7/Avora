@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}Lost & Found | Admin | Avora{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">{% endblock %}
+
+{% block body %}
+<div class="dashboard-layout">
+    <button class="mobile-menu-toggle" id="mobile-toggle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    {% include 'admin/_sidebar.html' %}
+
+    <main class="main-content page-content">
+        {% include 'components/back_button.html' %}
+        
+        <div class="command-header">
+            <span class="overline">Campus Moderation</span>
+            <h1 class="command-greeting" style="font-size: 1.75rem;">Lost &amp; Found Property Desk</h1>
+            <p class="command-subtext">Review finder submissions, verify ownership claim answers, and manage student lost property reports.</p>
+        </div>
+
+        <!-- Moderation Stats Grid -->
+        <div class="stats-grid stats-grid-6">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Found Items</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><path d="M11 8v6"></path><path d="M8 11h6"></path></svg>
+                </div>
+                <div class="stat-number">{{ stats.total_found }}</div>
+                <div class="text-xs text-muted">All reported found</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Unclaimed</span>
+                    <span class="badge badge-upcoming" style="padding: 1px 5px;">Awaiting</span>
+                </div>
+                <div class="stat-number">{{ stats.unclaimed }}</div>
+                <div class="text-xs text-muted">No claims filed</div>
+            </div>
+
+            <div class="stat-card" style="border-left: 3px solid var(--warning);">
+                <div class="stat-card-header">
+                    <span class="stat-label">Pending Claims</span>
+                    <span class="badge badge-warning" style="padding: 1px 5px; background-color: var(--warning-soft); color: var(--warning); border: 1px solid var(--warning);">Review</span>
+                </div>
+                <div class="stat-number" style="color: var(--warning);">{{ stats.pending_claims }}</div>
+                <div class="text-xs text-muted">Needs verification</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Claimed</span>
+                    <span class="badge badge-active" style="padding: 1px 5px;">Handed Over</span>
+                </div>
+                <div class="stat-number" style="color: var(--success);">{{ stats.claimed }}</div>
+                <div class="text-xs text-muted">Returned to owner</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Lost Reports</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </div>
+                <div class="stat-number">{{ stats.total_lost }}</div>
+                <div class="text-xs text-muted">Total owner reports</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <span class="stat-label">Open Lost</span>
+                    <span class="badge badge-department" style="padding: 1px 5px;">Active</span>
+                </div>
+                <div class="stat-number" style="color: var(--info);">{{ stats.open_lost }}</div>
+                <div class="text-xs text-muted">Unresolved searches</div>
+            </div>
+        </div>
+
+        <!-- Found Items -->
+        <div class="section-card" style="margin-bottom: var(--space-24);">
+            <div class="section-card-header">
+                <h3 class="section-card-title">Found Items (Reported by Finders)</h3>
+                <span class="badge badge-department">{{ found_items | length }}</span>
+            </div>
+            {% if found_items %}
+            <div class="item-list">
+                {% for item in found_items %}
+                <div class="item-row">
+                    <div class="item-row-info">
+                        <div class="item-row-title">{{ item.title }}</div>
+                        <div class="item-row-meta">
+                            {{ item.category }} · {{ item.location_found or '-' }} · Reported by {{ item.reporter_name or 'Unknown' }}
+                        </div>
+                        <div class="text-xs text-muted" style="margin-top: 2px;">
+                            Verification Q: "{{ item.verification_question }}" / A: "{{ item.verification_answer }}"
+                        </div>
+                    </div>
+                    <div class="item-row-actions">
+                        <span class="badge {% if item.status == 'unclaimed' %}badge-upcoming{% elif item.status == 'claim_pending' %}badge-active{% elif item.status == 'claimed' %}badge-closed{% endif %}">{{ item.status }}</span>
+                        {% if item.status == 'claim_pending' %}
+                        <a href="{{ url_for('lost_found.admin_claims', item_id=item._id) }}" class="btn btn-primary btn-sm">Review Claims</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state"><h4>No found items reported yet</h4></div>
+            {% endif %}
+        </div>
+
+        <!-- Lost Reports -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <h3 class="section-card-title">Lost Item Reports (Reported by Owners)</h3>
+                <span class="badge badge-department">{{ lost_items | length }}</span>
+            </div>
+            {% if lost_items %}
+            <div class="item-list">
+                {% for item in lost_items %}
+                <div class="item-row">
+                    <div class="item-row-info">
+                        <div class="item-row-title">{{ item.title }}</div>
+                        <div class="item-row-meta">
+                            {{ item.category }} · Last seen: {{ item.location_lost or '-' }} · Reported by {{ item.reporter_name or 'Unknown' }}
+                        </div>
+                        {% if item.description %}
+                        <div class="text-xs text-muted" style="margin-top: 2px;">{{ item.description }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="item-row-actions">
+                        <span class="badge {% if item.status == 'open' %}badge-upcoming{% elif item.status == 'matched' %}badge-active{% else %}badge-closed{% endif %}">{{ item.status }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state"><h4>No lost items reported yet</h4></div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+<script>
+    const toggle = document.getElementById('mobile-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    toggle.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('active'); });
+    overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); });
+</script>
+{% endblock %}

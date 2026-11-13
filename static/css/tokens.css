@@ -1,0 +1,212 @@
+/*
+   AVORA Design Tokens
+   University Platform: Khwaja Moinuddin Chishti Language University (KMCLU)
+   Accent: Deep University Blue (#173B63)
+   Typography: Newsreader (Display) + Inter (Body/UI)
+   Strict 8px spacing system: 8, 16, 24, 32, 40, 48, 64, 80
+*/
+
+:root {
+    /* Institutional Accent */
+    --accent: #113258;
+    --accent-hover: #194577;
+    --accent-dark: #0a1f36;
+    --accent-soft: rgba(17, 50, 88, 0.08);
+    --accent-muted: rgba(17, 50, 88, 0.15);
+
+    /* University Brand Palette */
+    --univ-gold: #c29014;
+    --univ-gold-hover: #a87b0f;
+    --univ-gold-soft: rgba(194, 144, 20, 0.12);
+    --univ-gold-border: rgba(194, 144, 20, 0.35);
+    --univ-maroon: #851818;
+    --univ-navy: #0e2a47;
+
+    /* Neutrals: Light Yellow / Academic Cream & Warm Ivory Theme */
+    --bg: #faf5e6;                  /* Warm delicate light-yellow ivory page canvas */
+    --surface: #ffffff;             /* Crisp clean card surface */
+    --surface-2: #f2e9d2;           /* Refined warm section background */
+    --surface-hover: #f7f1e1;       /* Warm subtle hover state */
+
+    --text: #1a1a18;                /* Deep readable charcoal text */
+    --text-secondary: #424037;      /* Warm secondary body text */
+    --text-muted: #696556;          /* Dignified muted notes */
+    --text-inverse: #ffffff;
+
+    --border: #d4c59e;              /* Defined warm stone-gold border */
+    --border-strong: #b8a26e;       /* Confident, well-defined architectural border */
+    --border-subtle: #e8dcbe;       /* Subtle inner dividers */
+
+    /* Form Controls */
+    --input-bg: #fdfcf8;
+    --input-text: #1a1a18;
+    --input-border: #b8a26e;
+    --input-border-focus: #c29014;
+    --input-placeholder: #7c7766;
+
+    /* Dropdowns */
+    --dropdown-bg: #ffffff;
+    --dropdown-text: #1a1a18;
+    --dropdown-border: #b8a26e;
+    --dropdown-hover: #f7f1e1;
+    --dropdown-selected: #ebdcb5;
+
+    /* Modals & Overlays */
+    --modal-bg: #ffffff;
+    --modal-text: #1a1a18;
+    --modal-border: #b8a26e;
+    --overlay-bg: rgba(18, 22, 28, 0.65);
+
+    /* Buttons */
+    --button-bg: #113258;
+    --button-text: #ffffff;
+    --button-ghost-border: #b8a26e;
+    --button-ghost-hover: #f2e9d2;
+
+    /* Status Indicators */
+    --success: #15803d;
+    --success-soft: rgba(21, 128, 61, 0.1);
+    --warning: #b45309;
+    --warning-soft: rgba(180, 83, 9, 0.12);
+    --danger: #b91c1c;
+    --danger-soft: rgba(185, 28, 28, 0.1);
+    --info: #0284c7;
+    --info-soft: rgba(2, 132, 199, 0.12);
+
+    /* 8px Spacing System */
+    --s-4: 4px;
+    --s-8: 8px;
+    --s-12: 12px;
+    --s-16: 16px;
+    --s-20: 20px;
+    --s-24: 24px;
+    --s-32: 32px;
+    --s-40: 40px;
+    --s-48: 48px;
+    --s-56: 56px;
+    --s-64: 64px;
+    --s-80: 80px;
+
+    /* Spacing aliases */
+    --space-4: var(--s-4);
+    --space-8: var(--s-8);
+    --space-12: var(--s-12);
+    --space-16: var(--s-16);
+    --space-20: var(--s-20);
+    --space-24: var(--s-24);
+    --space-32: var(--s-32);
+    --space-40: var(--s-40);
+    --space-48: var(--s-48);
+    --space-56: var(--s-56);
+    --space-64: var(--s-64);
+    --space-80: var(--s-80);
+
+    /* Typography */
+    --font-display: 'Newsreader', Georgia, serif;
+    --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-body: var(--font-ui);
+
+    /* Crisp Architectural Radii */
+    --radius-xs: 2px;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-full: 9999px;
+
+    /* Shadows: Subtle & Structural */
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 10px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 10px 25px rgba(15, 23, 42, 0.08);
+
+    /* Transitions */
+    --dur-fast: 150ms;
+    --dur-base: 200ms;
+    --dur-slow: 250ms;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-fast: var(--dur-fast);
+    --duration-base: var(--dur-base);
+    --duration-slow: var(--dur-slow);
+
+    /* Z-Index */
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-overlay: 900;
+    --z-drawer: 950;
+    --z-modal: 1000;
+    --z-toast: 1100;
+}
+
+/* Dark Mode Tokens */
+[data-theme="dark"] {
+    --accent: #e5b338;
+    --accent-hover: #f3c246;
+    --accent-dark: #b8860b;
+    --accent-soft: rgba(229, 179, 56, 0.14);
+    --accent-muted: rgba(229, 179, 56, 0.22);
+
+    /* University Brand Palette (Dark Mode) */
+    --univ-gold: #e5b338;
+    --univ-gold-hover: #f3c246;
+    --univ-gold-soft: rgba(229, 179, 56, 0.16);
+    --univ-gold-border: rgba(229, 179, 56, 0.35);
+    --univ-maroon: #b83a3a;
+    --univ-navy: #151e2a;
+
+    /* Neutrals: Dark Mode with warm amber-obsidian undertones */
+    --bg: #11120f;
+    --surface: #191b15;
+    --surface-2: #22251c;
+    --surface-hover: #2a2e22;
+
+    --text: #f7f6f0;
+    --text-secondary: #d6d3c4;
+    --text-muted: #a39f8f;
+    --text-inverse: #11120f;
+
+    --border: #444937;
+    --border-strong: #6d7558;
+    --border-subtle: #2b2e23;
+
+    /* Form Controls */
+    --input-bg: #191b15;
+    --input-text: #f7f6f0;
+    --input-border: #6d7558;
+    --input-border-focus: #e5b338;
+    --input-placeholder: #807c6d;
+
+    /* Dropdowns */
+    --dropdown-bg: #191b15;
+    --dropdown-text: #f7f6f0;
+    --dropdown-border: #6d7558;
+    --dropdown-hover: #22251c;
+    --dropdown-selected: #333a23;
+
+    /* Modals & Overlays */
+    --modal-bg: #191b15;
+    --modal-text: #f7f6f0;
+    --modal-border: #6d7558;
+    --overlay-bg: rgba(0, 0, 0, 0.82);
+
+    /* Buttons */
+    --button-bg: #c29014;
+    --button-text: #0e1208;
+    --button-ghost-border: #6d7558;
+    --button-ghost-hover: #22251c;
+
+    /* Status Indicators */
+    --success: #34d399;
+    --success-soft: rgba(52, 211, 153, 0.15);
+    --warning: #fbbf24;
+    --warning-soft: rgba(251, 191, 36, 0.15);
+    --danger: #f87171;
+    --danger-soft: rgba(248, 113, 113, 0.15);
+    --info: #38bdf8;
+    --info-soft: rgba(56, 189, 248, 0.15);
+
+    /* Shadows: Inverted for Dark Mode */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45);
+    --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.55);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.65);
+}
