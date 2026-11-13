@@ -127,6 +127,10 @@ def create_app():
             pass
         db.users.create_index('roll_no', unique=True, partialFilterExpression={'roll_no': {'$type': 'string'}})
         db.votes.create_index([('user_id', 1), ('election_id', 1)], unique=True)
+        otp_indexes = db.otps.index_information()
+        otp_ttl_index = otp_indexes.get('createdAt_1')
+        if otp_ttl_index and otp_ttl_index.get('expireAfterSeconds') != app.config['OTP_EXPIRY_SECONDS']:
+            db.otps.drop_index('createdAt_1')
         db.otps.create_index('createdAt', expireAfterSeconds=app.config['OTP_EXPIRY_SECONDS'])
         db.notifications.create_index([('user_id', 1), ('created_at', -1)])
         db.audit_log.create_index('timestamp', expireAfterSeconds=90 * 24 * 3600)  # 90-day retention

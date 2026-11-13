@@ -12,20 +12,20 @@
 
 /* ── Split Left Branding Column ── */
 .auth-split-brand {
-    flex: 1;
-    background-color: var(--accent);
+    flex: 0 0 44%;
+    background-color: var(--univ-navy);
     color: #ffffff;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: var(--s-48) var(--s-48);
+    padding: clamp(var(--s-24), 5vw, var(--s-64));
     position: relative;
     overflow: hidden;
 }
 
 [data-theme="dark"] .auth-split-brand {
-    background-color: #112033;
-    border-right: 1px solid var(--border);
+    background-color: var(--univ-navy);
+    border-right: 2px solid var(--border-strong);
 }
 
 /* Geometric campus architectural grid overlay */
@@ -52,6 +52,30 @@
     letter-spacing: -0.02em;
     color: #ffffff;
     margin-bottom: var(--s-4);
+}
+
+.auth-brand-kicker {
+    display: block;
+    margin-bottom: var(--s-4);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--univ-gold);
+}
+
+.auth-brand-mark {
+    display: flex;
+    align-items: center;
+    gap: var(--s-16);
+    margin-bottom: var(--s-16);
+}
+
+.auth-brand-mark img {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
 }
 
 .auth-brand-subtitle {
@@ -109,7 +133,7 @@
 
 /* ── Split Right Form Column ── */
 .auth-split-form {
-    flex: 1.1;
+    flex: 1 1 56%;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -125,8 +149,8 @@
     max-width: 440px;
     background-color: var(--surface);
     border: 2px solid var(--border-strong);
-    border-radius: var(--radius-md);
-    padding: var(--s-32);
+    border-radius: var(--radius-lg);
+    padding: clamp(var(--s-24), 4vw, var(--s-40));
     box-shadow: var(--shadow-md);
 }
 
@@ -163,7 +187,7 @@
     padding: 10px 16px;
     background-color: var(--surface);
     color: var(--text);
-    border: 1px solid var(--border-strong);
+    border: 2px solid var(--border-strong);
     border-radius: var(--radius-sm);
     font-size: 0.875rem;
     font-weight: 600;
@@ -232,34 +256,118 @@
 .auth-flash-error {
     background-color: var(--danger-soft);
     color: var(--danger);
-    border: 1px solid rgba(185, 28, 28, 0.2);
+    border: 1px solid var(--danger-soft);
 }
 
 .auth-flash-success {
     background-color: var(--success-soft);
     color: var(--success);
-    border: 1px solid rgba(21, 128, 61, 0.2);
+    border: 1px solid var(--success-soft);
 }
 
-/* Responsive auth */
+/* Responsive authentication */
 @media (max-width: 900px) {
     .auth-page-wrapper {
         flex-direction: column;
+        min-height: 100vh;
     }
 
     .auth-split-brand {
-        padding: var(--s-32) var(--s-24);
+        flex: 0 0 auto;
+        min-height: 0;
+        padding: var(--s-24);
+        border-bottom: 2px solid var(--univ-gold);
     }
 
     .auth-brand-center {
-        margin: var(--s-24) 0;
+        margin: var(--s-16) 0;
     }
 
     .auth-geometric-svg {
         display: none;
     }
 
+    .auth-brand-bottom {
+        display: none;
+    }
+
     .auth-split-form {
+        flex: 1 0 auto;
         padding: var(--s-32) var(--s-24);
+    }
+}
+
+@media (max-width: 560px) {
+    .auth-split-brand {
+        padding: var(--s-16) var(--s-20);
+    }
+
+    .auth-brand-mark {
+        gap: var(--s-12);
+        margin-bottom: var(--s-12);
+    }
+
+    .auth-brand-mark img {
+        width: 44px;
+        height: 44px;
+    }
+
+    .auth-brand-title {
+        font-size: 1.65rem;
+    }
+
+    .auth-brand-subtitle {
+        font-size: 0.7rem;
+    }
+
+    .auth-brand-center {
+        margin: var(--s-8) 0 0;
+    }
+
+    .auth-brand-pun {
+        font-size: 1.2rem;
+        margin-bottom: var(--s-4);
+    }
+
+    .auth-brand-text {
+        font-size: 0.85rem;
+        margin-bottom: 0;
+    }
+
+    .auth-split-form {
+        padding: var(--s-24) var(--s-16);
+        justify-content: flex-start;
+    }
+
+    .auth-form-container {
+        padding: var(--s-20);
+    }
+
+    .auth-header h2 {
+        font-size: 1.45rem;
+    }
+
+    .auth-form-container .form-group [style*="display: flex"] {
+        flex-wrap: wrap;
+    }
+
+    .auth-form-container .form-group [style*="display: flex"] > .form-input {
+        flex: 1 1 100% !important;
+        max-width: none !important;
+    }
+
+    .auth-form-container .form-group [style*="display: flex"] > .btn {
+        width: 100%;
+    }
+
+    .toast-container {
+        left: var(--s-12);
+        right: var(--s-12);
+        top: var(--s-12);
+    }
+
+    .toast {
+        min-width: 0;
+        max-width: none;
     }
 }

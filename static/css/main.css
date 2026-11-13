@@ -947,6 +947,53 @@ input[type="radio"] {
     margin: 0 auto;
 }
 
+@media (max-width: 600px) {
+    html {
+        font-size: 14px;
+    }
+
+    .btn {
+        min-height: 42px;
+        white-space: normal;
+        text-align: center;
+    }
+
+    .btn-sm {
+        min-height: 36px;
+    }
+
+    .form-input,
+    .form-select {
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    .card,
+    .section-card {
+        padding: var(--s-16);
+        margin-bottom: var(--s-16);
+    }
+
+    .data-table {
+        min-width: 600px;
+    }
+
+    .toast-container {
+        left: var(--s-12);
+        right: var(--s-12);
+    }
+
+    .toast {
+        min-width: 0;
+        max-width: none;
+    }
+
+    .ask-avora-launcher {
+        right: var(--s-12);
+        bottom: var(--s-12);
+    }
+}
+
 /* -----------------------------------------------
    THEME TOGGLE BUTTON
    ----------------------------------------------- */

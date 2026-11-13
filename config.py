@@ -18,8 +18,9 @@ class Config:
     MOCK_EMAIL = os.getenv("MOCK_EMAIL", "false").lower() == "true"
     BYPASS_OTP = os.getenv("BYPASS_OTP", "false").lower() == "true"
     
-    # OTP config - 60 seconds limit
-    OTP_EXPIRY_SECONDS = int(os.getenv('OTP_EXPIRY_SECONDS', 60))
+    # OTPs stay valid for five minutes; resend requests are throttled separately.
+    OTP_EXPIRY_SECONDS = int(os.getenv('OTP_EXPIRY_SECONDS', 300))
+    OTP_RESEND_SECONDS = int(os.getenv('OTP_RESEND_SECONDS', 60))
     
     # Google OAuth config
     GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')

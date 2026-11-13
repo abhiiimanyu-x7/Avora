@@ -32,7 +32,7 @@ def send_otp_email(to_email, otp, purpose="Registration"):
                 <div style="background-color: #f1f5f9; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; border: 2px solid #cbd5e1;">
                     <h1 style="margin: 0; letter-spacing: 6px; color: #0f2d4a; font-family: monospace;">{otp}</h1>
                 </div>
-                <p>This verification code is valid for {Config.OTP_EXPIRY_SECONDS // 60} minutes.</p>
+                <p>This verification code is valid for {Config.OTP_EXPIRY_SECONDS} seconds.</p>
                 <p>If you did not initiate this request, please ignore this email or notify campus administration.</p>
                 <br>
                 <p>Office of Digital Governance,<br>Khwaja Moinuddin Chishti Language University</p>

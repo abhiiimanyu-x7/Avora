@@ -5,9 +5,33 @@ from services.user_service import (
 )
 from services.email_service import generate_otp, send_otp_email
 from config import Config
-from datetime import datetime
+from datetime import datetime, timedelta
 
 auth_bp = Blueprint('auth', __name__)
+
+
+def _otp_resend_wait(db, email):
+    """Return seconds until another code can be sent for this email."""
+    record = db.otps.find_one({'email': email}, {'createdAt': 1})
+    created_at = record.get('createdAt') if record else None
+    if not created_at:
+        return 0
+
+    remaining = (
+        created_at + timedelta(seconds=Config.OTP_RESEND_SECONDS) - datetime.utcnow()
+    ).total_seconds()
+    return max(0, int(remaining + 0.999))
+
+
+def _otp_sent_message():
+    """Describe the configured OTP validity period."""
+    expiry_seconds = Config.OTP_EXPIRY_SECONDS
+    if expiry_seconds < 60:
+        duration = f'{expiry_seconds} seconds'
+    else:
+        minutes = (expiry_seconds + 59) // 60
+        duration = f'{minutes} minute' if minutes == 1 else f'{minutes} minutes'
+    return f'Verification code sent. It remains valid for {duration}.'
 
 
 @auth_bp.route('/student/send-otp', methods=['POST'])
@@ -25,10 +49,17 @@ def send_otp():
         
     if get_user_by_email(email):
         return jsonify({'success': False, 'message': 'An account with this email already exists.'}), 400
-        
-    otp = generate_otp()
-    
+
     db = get_db()
+    resend_wait = _otp_resend_wait(db, email)
+    if resend_wait:
+        return jsonify({
+            'success': False,
+            'message': f'Please wait {resend_wait} seconds before requesting another code.',
+            'retry_after': resend_wait,
+        }), 429
+
+    otp = generate_otp()
     db.otps.update_one(
         {'email': email},
         {'$set': {'otp': otp, 'createdAt': datetime.utcnow()}},
@@ -36,14 +67,19 @@ def send_otp():
     )
     
     if send_otp_email(email, otp):
-        return jsonify({'success': True, 'message': 'OTP sent successfully!'})
+        return jsonify({
+            'success': True,
+            'message': _otp_sent_message(),
+            'expires_in': Config.OTP_EXPIRY_SECONDS,
+            'resend_after': Config.OTP_RESEND_SECONDS,
+        })
     else:
         return jsonify({'success': False, 'message': 'Failed to send OTP. Please try again.'}), 500
 
 
 @auth_bp.route('/student/verify-otp', methods=['POST'])
 def verify_otp():
-    """Verify OTP for registration with 60-second time limit."""
+    """Verify a registration OTP before it expires."""
     data = request.get_json() or {}
     email = data.get('email', '').strip().lower()
     otp_input = data.get('otp', '').strip()
@@ -60,7 +96,7 @@ def verify_otp():
     if created_at:
         elapsed = (datetime.utcnow() - created_at).total_seconds()
         if elapsed > Config.OTP_EXPIRY_SECONDS:
-            return jsonify({'success': False, 'message': f'Verification code has expired ({Config.OTP_EXPIRY_SECONDS}s limit). Please request a new one.'}), 400
+            return jsonify({'success': False, 'message': 'Verification code has expired. Please request a new one.'}), 400
         
     return jsonify({'success': True, 'message': 'Verification code verified successfully!'})
 
@@ -102,7 +138,7 @@ def student_signup():
             elif otp_record.get('createdAt'):
                 elapsed = (datetime.utcnow() - otp_record['createdAt']).total_seconds()
                 if elapsed > Config.OTP_EXPIRY_SECONDS:
-                    errors.append(f'OTP code expired ({Config.OTP_EXPIRY_SECONDS}s limit). Please request a new code.')
+                    errors.append('Verification code has expired. Please request a new code.')
                 
         if password != confirm_password:
             errors.append('Passwords do not match.')
@@ -303,7 +339,7 @@ def forgot_password():
             flash('Passwords do not match.', 'error')
             return render_template('auth/forgot_password.html', role=form_role, email=email)
 
-        # Verify OTP with 60s limit
+        # Verify OTP against its configured expiry; resend throttling is separate.
         db = get_db()
         if not Config.BYPASS_OTP:
             otp_record = db.otps.find_one({'email': email})
@@ -313,7 +349,7 @@ def forgot_password():
             elif otp_record.get('createdAt'):
                 elapsed = (datetime.utcnow() - otp_record['createdAt']).total_seconds()
                 if elapsed > Config.OTP_EXPIRY_SECONDS:
-                    flash(f'Verification code expired ({Config.OTP_EXPIRY_SECONDS}s limit). Please request a new code.', 'error')
+                    flash('Verification code has expired. Please request a new code.', 'error')
                     return render_template('auth/forgot_password.html', role=form_role, email=email)
 
         # Execute password reset
@@ -340,11 +376,21 @@ def forgot_password_send_otp():
 
     if not email:
         return jsonify({'success': False, 'message': 'Email address is required.'}), 400
+    if role not in ('student', 'admin'):
+        return jsonify({'success': False, 'message': 'Choose a valid account type.'}), 400
 
     db = get_db()
     user = db.users.find_one({'email': email, 'role': role})
     if not user:
         return jsonify({'success': False, 'message': f'No {role} account found matching this email.'}), 404
+
+    resend_wait = _otp_resend_wait(db, email)
+    if resend_wait:
+        return jsonify({
+            'success': False,
+            'message': f'Please wait {resend_wait} seconds before requesting another code.',
+            'retry_after': resend_wait,
+        }), 429
 
     otp = generate_otp()
     db.otps.update_one(
@@ -354,13 +400,18 @@ def forgot_password_send_otp():
     )
 
     if send_otp_email(email, otp, purpose="Password Reset"):
-        return jsonify({'success': True, 'message': 'Verification code sent to your email.'})
+        return jsonify({
+            'success': True,
+            'message': _otp_sent_message(),
+            'expires_in': Config.OTP_EXPIRY_SECONDS,
+            'resend_after': Config.OTP_RESEND_SECONDS,
+        })
     return jsonify({'success': False, 'message': 'Failed to send verification code. Try again.'}), 500
 
 
 @auth_bp.route('/forgot-password/verify-otp', methods=['POST'])
 def forgot_password_verify_otp():
-    """Verify OTP for password reset with 60-second time limit."""
+    """Verify a password reset OTP before it expires."""
     data = request.get_json() or {}
     email = data.get('email', '').strip().lower()
     otp_input = data.get('otp', '').strip()
@@ -377,6 +428,6 @@ def forgot_password_verify_otp():
     if created_at:
         elapsed = (datetime.utcnow() - created_at).total_seconds()
         if elapsed > Config.OTP_EXPIRY_SECONDS:
-            return jsonify({'success': False, 'message': f'Code has expired ({Config.OTP_EXPIRY_SECONDS}s limit). Please request a new one.'}), 400
+            return jsonify({'success': False, 'message': 'Verification code has expired. Please request a new one.'}), 400
 
     return jsonify({'success': True, 'message': 'Code verified successfully!'})

@@ -149,7 +149,7 @@
     justify-content: space-between;
     padding: 0 var(--s-48);
     background-color: var(--univ-navy);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 2px solid var(--univ-gold);
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
@@ -310,7 +310,7 @@
 .hero-visual {
     background-color: var(--bg);
     border: 2px solid var(--border-strong);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     padding: var(--s-20);
     box-shadow: var(--shadow-sm);
     display: flex;
@@ -320,7 +320,7 @@
 
 .hero-dispatch-box {
     background-color: var(--surface);
-    border: 1px solid var(--border-strong);
+    border: 2px solid var(--border);
     border-left: 3px solid var(--univ-gold);
     border-radius: var(--radius-sm);
     padding: var(--s-16);
@@ -357,7 +357,7 @@
     background-color: var(--surface);
     border: 2px solid var(--border-strong);
     border-top: 4px solid var(--univ-gold);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     padding: var(--s-28) var(--s-24);
     display: flex;
     flex-direction: column;
@@ -468,7 +468,7 @@
     gap: 2px;
     background-color: var(--border-strong);
     border: 2px solid var(--border-strong);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: var(--shadow-sm);
 }
@@ -618,7 +618,7 @@
 }
 
 [data-theme="dark"] .landing-footer {
-    background-color: #0b0c09;
+    background-color: var(--univ-navy);
 }
 
 .footer-inner {
@@ -637,7 +637,7 @@
         grid-template-columns: repeat(2, 1fr);
     }
     .leadership-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -654,7 +654,25 @@
         align-items: flex-start;
     }
     .landing-nav {
-        padding: 0 var(--s-20);
+        padding: 0 var(--s-16);
+        gap: var(--s-12);
+    }
+    .nav-links {
+        flex: 1;
+        min-width: 0;
+        gap: var(--s-16);
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+    }
+    .nav-links::-webkit-scrollbar {
+        display: none;
+    }
+    .nav-links a {
+        flex-shrink: 0;
+    }
+    .nav-actions {
+        flex-shrink: 0;
     }
     .hero-grid {
         grid-template-columns: 1fr;
@@ -675,9 +693,163 @@
         padding: var(--s-40) var(--s-20);
     }
     .services-compendium {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .landing-footer {
         padding: var(--s-32) var(--s-20);
+    }
+}
+
+@media (max-width: 600px) {
+    .univ-topbar {
+        padding: var(--s-8) var(--s-16);
+        font-size: 0.7rem;
+    }
+
+    .univ-topbar-left,
+    .univ-topbar-right {
+        gap: var(--s-8);
+    }
+
+    .univ-topbar-divider,
+    .univ-topbar-left > span:not(.univ-topbar-tag),
+    .univ-topbar-right > span:not(.univ-topbar-divider) {
+        display: none;
+    }
+
+    .univ-header {
+        padding: var(--s-12) var(--s-16);
+        gap: var(--s-12);
+    }
+
+    .univ-brand-container {
+        gap: var(--s-12);
+        width: 100%;
+    }
+
+    .univ-seal-img {
+        width: 48px;
+        height: 48px;
+    }
+
+    .univ-title-hindi {
+        font-size: 0.73rem;
+    }
+
+    .univ-title-english {
+        font-size: 1rem;
+    }
+
+    .univ-title-sub {
+        font-size: 0.62rem;
+    }
+
+    .univ-header-badges {
+        width: 100%;
+        justify-content: space-between;
+        gap: var(--s-8);
+    }
+
+    .naac-badge-header {
+        height: 40px;
+    }
+
+    .portal-emblem-badge {
+        margin-right: auto;
+    }
+
+    .univ-header-badges > div:last-child {
+        margin-left: auto !important;
+    }
+
+    .landing-nav {
+        height: 44px;
+        padding: 0 var(--s-12);
+    }
+
+    .nav-links {
+        gap: var(--s-12);
+    }
+
+    .nav-links a {
+        font-size: 0.78rem;
+    }
+
+    .nav-actions {
+        display: none;
+    }
+
+    .univ-ticker-strip {
+        padding: var(--s-8) var(--s-12);
+    }
+
+    .ticker-label {
+        margin-right: var(--s-8);
+    }
+
+    .ticker-content {
+        font-size: 0.75rem;
+    }
+
+    .landing-hero,
+    .leadership-section,
+    .landing-section,
+    .academics-section,
+    .institution-banner {
+        padding: var(--s-32) var(--s-16);
+    }
+
+    .hero-title {
+        font-size: clamp(1.9rem, 9vw, 2.5rem);
+    }
+
+    .hero-description {
+        font-size: 0.95rem;
+        margin-bottom: var(--s-24);
+    }
+
+    .hero-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        margin-bottom: var(--s-24);
+    }
+
+    .hero-actions .btn {
+        width: 100%;
+    }
+
+    .hero-status-strip {
+        gap: var(--s-12);
+    }
+
+    .hero-visual {
+        padding: var(--s-12);
+    }
+
+    .section-header {
+        margin-bottom: var(--s-24);
+    }
+
+    .leadership-grid,
+    .services-compendium,
+    .academics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .service-entry {
+        padding: var(--s-20);
+    }
+
+    .banner-inner {
+        gap: var(--s-24);
+    }
+
+    .landing-footer {
+        padding: var(--s-24) var(--s-16);
+    }
+
+    .footer-inner {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }

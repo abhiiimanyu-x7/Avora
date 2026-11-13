@@ -111,7 +111,7 @@
                     <div style="background-color: var(--surface-2); border: 2px solid var(--border); border-radius: var(--radius-sm); padding: var(--s-16); margin-bottom: var(--s-16);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                             <label for="otp" class="form-label" style="margin-bottom: 0;">Email Verification Code</label>
-                            <span id="otp-countdown" style="font-size: 0.775rem; font-weight: 700; color: var(--warning); display: none;">⏱️ 60s remaining</span>
+                            <span id="otp-countdown" style="font-size: 0.775rem; font-weight: 700; color: var(--warning); display: none;"></span>
                         </div>
                         <div style="display: flex; gap: var(--s-8); margin-top: 6px;">
                             <input type="text" name="otp" id="otp" class="form-input" placeholder="6-digit code" maxlength="6" style="max-width: 130px; font-family: monospace; letter-spacing: 2px; font-weight: 700;">
@@ -202,24 +202,22 @@
         let timeLeft = seconds;
         otpCountdown.style.display = 'inline-block';
         otpCountdown.style.color = 'var(--warning)';
-        otpCountdown.textContent = `⏱️ ${timeLeft}s remaining`;
+        otpCountdown.textContent = `Resend in ${timeLeft}s`;
+        sendOtpBtn.disabled = true;
+        sendOtpBtn.textContent = `Resend in ${timeLeft}s`;
         otpInput.disabled = false;
 
         countdownInterval = setInterval(() => {
             timeLeft--;
             if (timeLeft <= 0) {
                 clearInterval(countdownInterval);
-                otpCountdown.textContent = '⏱️ Code expired (60s limit)';
-                otpCountdown.style.color = 'var(--danger)';
-                verifyOtpBtn.disabled = true;
+                otpCountdown.textContent = 'Resend available';
+                otpCountdown.style.color = 'var(--success)';
                 sendOtpBtn.disabled = false;
                 sendOtpBtn.textContent = 'Resend OTP';
-                if (!isOtpVerified) {
-                    otpStatus.textContent = 'Verification code has expired. Please click Resend OTP.';
-                    otpStatus.style.color = 'var(--danger)';
-                }
             } else {
-                otpCountdown.textContent = `⏱️ ${timeLeft}s remaining`;
+                otpCountdown.textContent = `Resend in ${timeLeft}s`;
+                sendOtpBtn.textContent = `Resend in ${timeLeft}s`;
             }
         }, 1000);
     }
@@ -255,11 +253,15 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    otpStatus.textContent = 'Code sent! You have 60 seconds to enter it.';
+                    otpStatus.textContent = data.message || `Code sent. You can request another after ${data.resend_after || 60} seconds.`;
                     otpStatus.style.color = 'var(--success)';
                     verifyOtpBtn.disabled = false;
                     otpInput.focus();
-                    startTimer(60);
+                    startTimer(data.resend_after || 60);
+                } else if (data.retry_after) {
+                    otpStatus.textContent = data.message || 'Please wait before requesting another code.';
+                    otpStatus.style.color = 'var(--warning)';
+                    startTimer(data.retry_after);
                 } else {
                     otpStatus.textContent = data.message || 'Failed to send code.';
                     otpStatus.style.color = 'var(--danger)';

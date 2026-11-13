@@ -8,60 +8,60 @@
 
 :root {
     /* Institutional Accent */
-    --accent: #0f2d4a;
-    --accent-hover: #17426c;
-    --accent-dark: #091c2e;
-    --accent-soft: rgba(15, 45, 74, 0.08);
-    --accent-muted: rgba(15, 45, 74, 0.16);
+    --accent: #173b63;
+    --accent-hover: #214f7d;
+    --accent-dark: #102a47;
+    --accent-soft: rgba(23, 59, 99, 0.08);
+    --accent-muted: rgba(23, 59, 99, 0.15);
 
     /* University Brand Palette */
-    --univ-gold: #c28812;
-    --univ-gold-hover: #a6720c;
-    --univ-gold-soft: rgba(194, 136, 18, 0.12);
-    --univ-gold-border: rgba(194, 136, 18, 0.38);
-    --univ-maroon: #851818;
-    --univ-navy: #091e36;
+    --univ-gold: #a87924;
+    --univ-gold-hover: #8d641c;
+    --univ-gold-soft: rgba(168, 121, 36, 0.1);
+    --univ-gold-border: rgba(168, 121, 36, 0.32);
+    --univ-maroon: #873d43;
+    --univ-navy: #102a47;
 
     /* Neutrals: Executive Academic Slate & Crisp White */
-    --bg: #f8fafc;                  /* Crisp, modern university canvas */
-    --surface: #ffffff;             /* Pristine white card surface */
-    --surface-2: #f1f5f9;           /* Clean secondary slate section */
-    --surface-hover: #e2e8f0;       /* Subtle interactive hover */
+    --bg: #f4f6f8;
+    --surface: #ffffff;
+    --surface-2: #eaf0f5;
+    --surface-hover: #e1e9f0;
 
-    --text: #0f172a;                /* Deep slate charcoal (high contrast, crisp) */
-    --text-secondary: #334155;      /* Dignified readable slate */
-    --text-muted: #64748b;          /* Professional secondary labels */
+    --text: #192b3d;
+    --text-secondary: #43576b;
+    --text-muted: #66798b;
     --text-inverse: #ffffff;
 
-    --border: #cbd5e1;              /* Crisp clean border */
-    --border-strong: #1e293b;       /* Bold, architectural, authoritative 2px border */
-    --border-subtle: #e2e8f0;       /* Subtle dividers */
+    --border: #d3dce5;
+    --border-strong: #9cabb9;
+    --border-subtle: #e5ebf0;
 
     /* Form Controls */
     --input-bg: #ffffff;
     --input-text: #0f172a;
-    --input-border: #cbd5e1;
-    --input-border-focus: #0f2d4a;
-    --input-placeholder: #94a3b8;
+    --input-border: #aab8c6;
+    --input-border-focus: #173b63;
+    --input-placeholder: #77899a;
 
     /* Dropdowns */
     --dropdown-bg: #ffffff;
     --dropdown-text: #0f172a;
-    --dropdown-border: #1e293b;
-    --dropdown-hover: #f1f5f9;
-    --dropdown-selected: #e2e8f0;
+    --dropdown-border: #9cabb9;
+    --dropdown-hover: #eaf0f5;
+    --dropdown-selected: #dce6ee;
 
     /* Modals & Overlays */
     --modal-bg: #ffffff;
     --modal-text: #0f172a;
-    --modal-border: #1e293b;
+    --modal-border: #9cabb9;
     --overlay-bg: rgba(15, 23, 42, 0.65);
 
     /* Buttons */
-    --button-bg: #0f2d4a;
+    --button-bg: #173b63;
     --button-text: #ffffff;
-    --button-ghost-border: #1e293b;
-    --button-ghost-hover: #f1f5f9;
+    --button-ghost-border: #9cabb9;
+    --button-ghost-hover: #eaf0f5;
 
     /* Status Indicators */
     --success: #15803d;
@@ -139,60 +139,60 @@
 
 /* Dark Mode Tokens */
 [data-theme="dark"] {
-    --accent: #38bdf8;
-    --accent-hover: #60a5fa;
-    --accent-dark: #0284c7;
-    --accent-soft: rgba(56, 189, 248, 0.14);
-    --accent-muted: rgba(56, 189, 248, 0.22);
+    --accent: #a9c8e6;
+    --accent-hover: #c4dcf0;
+    --accent-dark: #6f9fc9;
+    --accent-soft: rgba(169, 200, 230, 0.14);
+    --accent-muted: rgba(169, 200, 230, 0.22);
 
     /* University Brand Palette (Dark Mode) */
-    --univ-gold: #fbbf24;
-    --univ-gold-hover: #f59e0b;
-    --univ-gold-soft: rgba(251, 191, 36, 0.16);
-    --univ-gold-border: rgba(251, 191, 36, 0.35);
-    --univ-maroon: #f87171;
-    --univ-navy: #060b14;
+    --univ-gold: #e0bd72;
+    --univ-gold-hover: #edcc86;
+    --univ-gold-soft: rgba(224, 189, 114, 0.14);
+    --univ-gold-border: rgba(224, 189, 114, 0.34);
+    --univ-maroon: #c4777c;
+    --univ-navy: #0d1d30;
 
     /* Neutrals: Executive Deep Midnight Slate & Vibrant Defined Borders */
-    --bg: #0b1120;                  /* Deep midnight academic canvas */
-    --surface: #111c30;             /* Elevated crisp navy-slate card */
-    --surface-2: #182640;           /* Elevated secondary container */
-    --surface-hover: #1e304f;       /* Interactive dark hover */
+    --bg: #0c1725;
+    --surface: #132337;
+    --surface-2: #1a2d43;
+    --surface-hover: #223b55;
 
-    --text: #f8fafc;                /* Pristine readable white */
-    --text-secondary: #cbd5e1;      /* Crisp readable slate */
-    --text-muted: #94a3b8;          /* Clear secondary captions */
-    --text-inverse: #0b1120;
+    --text: #f3f5f7;
+    --text-secondary: #c6d0da;
+    --text-muted: #9baaba;
+    --text-inverse: #0c1725;
 
-    --border: #1e3250;              /* Defined slate-navy border */
-    --border-strong: #3b567d;       /* Sharp, thick, visible 2px border in dark mode */
-    --border-subtle: #152236;
+    --border: #2b4057;
+    --border-strong: #50677e;
+    --border-subtle: #21364b;
 
     /* Form Controls */
-    --input-bg: #111c30;
-    --input-text: #f8fafc;
-    --input-border: #3b567d;
-    --input-border-focus: #38bdf8;
-    --input-placeholder: #64748b;
+    --input-bg: #132337;
+    --input-text: #f3f5f7;
+    --input-border: #50677e;
+    --input-border-focus: #a9c8e6;
+    --input-placeholder: #8293a5;
 
     /* Dropdowns */
-    --dropdown-bg: #111c30;
-    --dropdown-text: #f8fafc;
-    --dropdown-border: #3b567d;
-    --dropdown-hover: #182640;
-    --dropdown-selected: #1e304f;
+    --dropdown-bg: #132337;
+    --dropdown-text: #f3f5f7;
+    --dropdown-border: #50677e;
+    --dropdown-hover: #1a2d43;
+    --dropdown-selected: #223b55;
 
     /* Modals & Overlays */
-    --modal-bg: #111c30;
-    --modal-text: #f8fafc;
-    --modal-border: #3b567d;
+    --modal-bg: #132337;
+    --modal-text: #f3f5f7;
+    --modal-border: #50677e;
     --overlay-bg: rgba(0, 0, 0, 0.82);
 
     /* Buttons */
-    --button-bg: #38bdf8;
-    --button-text: #0b1120;
-    --button-ghost-border: #3b567d;
-    --button-ghost-hover: #182640;
+    --button-bg: #d5b66f;
+    --button-text: #17283a;
+    --button-ghost-border: #50677e;
+    --button-ghost-hover: #1a2d43;
 
     /* Status Indicators */
     --success: #34d399;
@@ -201,8 +201,8 @@
     --warning-soft: rgba(251, 191, 36, 0.15);
     --danger: #f87171;
     --danger-soft: rgba(248, 113, 113, 0.15);
-    --info: #38bdf8;
-    --info-soft: rgba(56, 189, 248, 0.15);
+    --info: #8fc4ea;
+    --info-soft: rgba(143, 196, 234, 0.15);
 
     /* Shadows: Inverted for Dark Mode */
     --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
