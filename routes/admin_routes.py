@@ -10,7 +10,7 @@ from services.vote_service import (
 )
 from services.user_service import (
     get_total_students, change_admin_password, get_user_by_id,
-    create_admin_user, get_all_admins, get_user_by_email, admin_has_scope,
+    create_admin_user, get_all_admins, delete_admin_user, get_user_by_email, admin_has_scope,
     get_system_setting, set_system_setting
 )
 from services.audit_service import log_action, get_recent_logs
@@ -346,6 +346,32 @@ def manage_admins():
     return render_template('admin/manage_admins.html',
                            admins=admins,
                            admin_scopes=Config.ADMIN_SCOPES)
+
+
+@admin_bp.route('/admin/manage-admins/delete/<admin_id>', methods=['POST'])
+@admin_required
+def delete_admin(admin_id):
+    """Delete an admin user."""
+    user = get_user_by_id(session['user_id'])
+    if user.get('admin_scope') != 'all':
+        flash('Access denied. Only super administrators can remove admin accounts.', 'error')
+        return redirect(url_for('admin.manage_admins'))
+
+    if str(user['_id']) == str(admin_id):
+        flash('You cannot delete your own active administrator account.', 'error')
+        return redirect(url_for('admin.manage_admins'))
+
+    admin_to_delete = get_user_by_id(admin_id)
+    if not admin_to_delete or admin_to_delete.get('role') != 'admin':
+        flash('Admin user not found.', 'error')
+        return redirect(url_for('admin.manage_admins'))
+
+    delete_admin_user(admin_id)
+    log_action(session['user_id'], session.get('user_name', ''),
+               'deleted_admin', 'admin', admin_id,
+               {'email': admin_to_delete.get('email')})
+    flash(f"Administrator {admin_to_delete.get('name')} ({admin_to_delete.get('email')}) removed.", 'success')
+    return redirect(url_for('admin.manage_admins'))
 
 
 @admin_bp.route('/admin/audit-log')

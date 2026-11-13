@@ -141,26 +141,38 @@ def create_app():
     except Exception as e:
         logger.warning('Index creation issue: %s', e)
 
-    # Auto seed default admin only once
-    existing_admin = db.users.find_one({'email': 'admin@avora.app'})
-
-    if not existing_admin:
-        try:
-            default_admin = {
-                'name': 'Admin',
-                'email': 'admin@avora.app',
-                'roll_no': None,
-                'department': 'Administration',
-                'year': None,
-                'password_hash': generate_password_hash('admin123123'),
-                'role': 'admin',
-                'admin_scope': 'all',
-                'created_at': datetime.utcnow(),
-            }
-            db.users.insert_one(default_admin)
-            logger.info('Default admin account seeded')
-        except Exception:
-            pass
+    # Auto seed default admin (admin@avora.app / Mannu@123 / scope all)
+    try:
+        existing_admin = db.users.find_one({'email': 'admin@avora.app'})
+        if not existing_admin:
+            already_seeded = db.settings.find_one({'key': 'admin_seeded'})
+            if not already_seeded:
+                default_admin = {
+                    'name': 'University Administrator',
+                    'email': 'admin@avora.app',
+                    'roll_no': None,
+                    'department': 'Administration',
+                    'year': None,
+                    'password_hash': generate_password_hash('Mannu@123'),
+                    'role': 'admin',
+                    'admin_scope': 'all',
+                    'created_at': datetime.utcnow(),
+                }
+                db.users.insert_one(default_admin)
+                db.settings.update_one({'key': 'admin_seeded'}, {'$set': {'value': True, 'seeded_at': datetime.utcnow()}}, upsert=True)
+                logger.info('Default admin account seeded (admin@avora.app)')
+        else:
+            db.users.update_one(
+                {'email': 'admin@avora.app'},
+                {'$set': {
+                    'password_hash': generate_password_hash('Mannu@123'),
+                    'role': 'admin',
+                    'admin_scope': 'all'
+                }}
+            )
+            db.settings.update_one({'key': 'admin_seeded'}, {'$set': {'value': True}}, upsert=True)
+    except Exception as e:
+        logger.warning('Admin seeding issue: %s', e)
 
     try:
         db.users.update_many({'role': 'admin', 'admin_scope': {'$exists': False}}, {'$set': {'admin_scope': 'all'}})
@@ -255,28 +267,28 @@ def create_app():
 
     @app.cli.command('seed-admin')
     def seed_admin_cli():
-        """Seed the default admin account."""
-        existing = db.users.find_one({'email': 'admin@avora.app'})
-        if existing:
-            click.echo('Admin account (admin@avora.app) already exists.')
-            return
-        default_admin = {
-            'name': 'Admin',
-            'email': 'admin@avora.app',
-            'roll_no': None,
-            'department': 'Administration',
-            'year': None,
-            'password_hash': generate_password_hash('admin123123'),
-            'role': 'admin',
-            'admin_scope': 'all',
-            'created_at': datetime.utcnow(),
-        }
-        db.users.insert_one(default_admin)
-        click.echo('Default admin account (admin@avora.app) created successfully.')
+        """Seed or reset the default admin account."""
+        db.users.update_one(
+            {'email': 'admin@avora.app'},
+            {'$set': {
+                'name': 'University Administrator',
+                'password_hash': generate_password_hash('Mannu@123'),
+                'role': 'admin',
+                'admin_scope': 'all',
+                'created_at': datetime.utcnow(),
+            }},
+            upsert=True
+        )
+        db.settings.update_one({'key': 'admin_seeded'}, {'$set': {'value': True}}, upsert=True)
+        click.echo('Default admin account (admin@avora.app) seeded successfully.')
 
     return app
 
 
+# ── WSGI Application Instance for Gunicorn / Render ──
+# Enables both `gunicorn app:app` and `gunicorn "app:create_app()"`
+app = create_app()
+
+
 if __name__ == '__main__':
-    app = create_app()
     app.run(debug=Config.DEBUG, port=5000)

@@ -170,6 +170,16 @@ def get_all_admins():
     return list(db.users.find({'role': 'admin'}))
 
 
+def delete_admin_user(admin_id):
+    """Delete an admin user by ID."""
+    from bson import ObjectId
+    db = get_db()
+    try:
+        return db.users.delete_one({'_id': ObjectId(admin_id), 'role': 'admin'})
+    except Exception:
+        return None
+
+
 def admin_has_scope(user, scope):
     """Check if an admin user has access to a given service scope.
 

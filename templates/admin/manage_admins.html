@@ -68,6 +68,7 @@
                         <th>Email</th>
                         <th>Scope</th>
                         <th>Type</th>
+                        <th style="text-align: right;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -77,6 +78,15 @@
                         <td class="text-sm">{{ admin.email }}</td>
                         <td><span class="badge badge-department">{{ admin.admin_scope | default('all') }}</span></td>
                         <td class="text-sm">{% if admin.is_teacher %}Faculty{% else %}Staff{% endif %}</td>
+                        <td style="text-align: right;">
+                            {% if admin._id|string != session.user_id|string %}
+                            <form method="POST" action="{{ url_for('admin.delete_admin', admin_id=admin._id) }}" style="display: inline;" onsubmit="return confirm('Remove administrator {{ admin.name }} ({{ admin.email }})?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" style="padding: 4px 10px; font-size: 0.75rem;">Remove</button>
+                            </form>
+                            {% else %}
+                            <span class="text-xs text-muted" style="opacity: 0.65;">(You)</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
