@@ -347,9 +347,10 @@
 
 .leadership-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: var(--s-24);
-    margin-top: var(--s-32);
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    max-width: 800px;
+    margin: var(--s-32) auto 0;
+    gap: var(--s-32);
 }
 
 .leader-card {

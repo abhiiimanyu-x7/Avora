@@ -8,60 +8,60 @@
 
 :root {
     /* Institutional Accent */
-    --accent: #113258;
-    --accent-hover: #194577;
-    --accent-dark: #0a1f36;
-    --accent-soft: rgba(17, 50, 88, 0.08);
-    --accent-muted: rgba(17, 50, 88, 0.15);
+    --accent: #0f2d4a;
+    --accent-hover: #17426c;
+    --accent-dark: #091c2e;
+    --accent-soft: rgba(15, 45, 74, 0.08);
+    --accent-muted: rgba(15, 45, 74, 0.16);
 
     /* University Brand Palette */
-    --univ-gold: #c29014;
-    --univ-gold-hover: #a87b0f;
-    --univ-gold-soft: rgba(194, 144, 20, 0.12);
-    --univ-gold-border: rgba(194, 144, 20, 0.35);
+    --univ-gold: #c28812;
+    --univ-gold-hover: #a6720c;
+    --univ-gold-soft: rgba(194, 136, 18, 0.12);
+    --univ-gold-border: rgba(194, 136, 18, 0.38);
     --univ-maroon: #851818;
-    --univ-navy: #0e2a47;
+    --univ-navy: #091e36;
 
-    /* Neutrals: Light Yellow / Academic Cream & Warm Ivory Theme */
-    --bg: #faf5e6;                  /* Warm delicate light-yellow ivory page canvas */
-    --surface: #ffffff;             /* Crisp clean card surface */
-    --surface-2: #f2e9d2;           /* Refined warm section background */
-    --surface-hover: #f7f1e1;       /* Warm subtle hover state */
+    /* Neutrals: Executive Academic Slate & Crisp White */
+    --bg: #f8fafc;                  /* Crisp, modern university canvas */
+    --surface: #ffffff;             /* Pristine white card surface */
+    --surface-2: #f1f5f9;           /* Clean secondary slate section */
+    --surface-hover: #e2e8f0;       /* Subtle interactive hover */
 
-    --text: #1a1a18;                /* Deep readable charcoal text */
-    --text-secondary: #424037;      /* Warm secondary body text */
-    --text-muted: #696556;          /* Dignified muted notes */
+    --text: #0f172a;                /* Deep slate charcoal (high contrast, crisp) */
+    --text-secondary: #334155;      /* Dignified readable slate */
+    --text-muted: #64748b;          /* Professional secondary labels */
     --text-inverse: #ffffff;
 
-    --border: #d4c59e;              /* Defined warm stone-gold border */
-    --border-strong: #b8a26e;       /* Confident, well-defined architectural border */
-    --border-subtle: #e8dcbe;       /* Subtle inner dividers */
+    --border: #cbd5e1;              /* Crisp clean border */
+    --border-strong: #1e293b;       /* Bold, architectural, authoritative 2px border */
+    --border-subtle: #e2e8f0;       /* Subtle dividers */
 
     /* Form Controls */
-    --input-bg: #fdfcf8;
-    --input-text: #1a1a18;
-    --input-border: #b8a26e;
-    --input-border-focus: #c29014;
-    --input-placeholder: #7c7766;
+    --input-bg: #ffffff;
+    --input-text: #0f172a;
+    --input-border: #cbd5e1;
+    --input-border-focus: #0f2d4a;
+    --input-placeholder: #94a3b8;
 
     /* Dropdowns */
     --dropdown-bg: #ffffff;
-    --dropdown-text: #1a1a18;
-    --dropdown-border: #b8a26e;
-    --dropdown-hover: #f7f1e1;
-    --dropdown-selected: #ebdcb5;
+    --dropdown-text: #0f172a;
+    --dropdown-border: #1e293b;
+    --dropdown-hover: #f1f5f9;
+    --dropdown-selected: #e2e8f0;
 
     /* Modals & Overlays */
     --modal-bg: #ffffff;
-    --modal-text: #1a1a18;
-    --modal-border: #b8a26e;
-    --overlay-bg: rgba(18, 22, 28, 0.65);
+    --modal-text: #0f172a;
+    --modal-border: #1e293b;
+    --overlay-bg: rgba(15, 23, 42, 0.65);
 
     /* Buttons */
-    --button-bg: #113258;
+    --button-bg: #0f2d4a;
     --button-text: #ffffff;
-    --button-ghost-border: #b8a26e;
-    --button-ghost-hover: #f2e9d2;
+    --button-ghost-border: #1e293b;
+    --button-ghost-hover: #f1f5f9;
 
     /* Status Indicators */
     --success: #15803d;
@@ -139,60 +139,60 @@
 
 /* Dark Mode Tokens */
 [data-theme="dark"] {
-    --accent: #e5b338;
-    --accent-hover: #f3c246;
-    --accent-dark: #b8860b;
-    --accent-soft: rgba(229, 179, 56, 0.14);
-    --accent-muted: rgba(229, 179, 56, 0.22);
+    --accent: #38bdf8;
+    --accent-hover: #60a5fa;
+    --accent-dark: #0284c7;
+    --accent-soft: rgba(56, 189, 248, 0.14);
+    --accent-muted: rgba(56, 189, 248, 0.22);
 
     /* University Brand Palette (Dark Mode) */
-    --univ-gold: #e5b338;
-    --univ-gold-hover: #f3c246;
-    --univ-gold-soft: rgba(229, 179, 56, 0.16);
-    --univ-gold-border: rgba(229, 179, 56, 0.35);
-    --univ-maroon: #b83a3a;
-    --univ-navy: #151e2a;
+    --univ-gold: #fbbf24;
+    --univ-gold-hover: #f59e0b;
+    --univ-gold-soft: rgba(251, 191, 36, 0.16);
+    --univ-gold-border: rgba(251, 191, 36, 0.35);
+    --univ-maroon: #f87171;
+    --univ-navy: #060b14;
 
-    /* Neutrals: Dark Mode with warm amber-obsidian undertones */
-    --bg: #11120f;
-    --surface: #191b15;
-    --surface-2: #22251c;
-    --surface-hover: #2a2e22;
+    /* Neutrals: Executive Deep Midnight Slate & Vibrant Defined Borders */
+    --bg: #0b1120;                  /* Deep midnight academic canvas */
+    --surface: #111c30;             /* Elevated crisp navy-slate card */
+    --surface-2: #182640;           /* Elevated secondary container */
+    --surface-hover: #1e304f;       /* Interactive dark hover */
 
-    --text: #f7f6f0;
-    --text-secondary: #d6d3c4;
-    --text-muted: #a39f8f;
-    --text-inverse: #11120f;
+    --text: #f8fafc;                /* Pristine readable white */
+    --text-secondary: #cbd5e1;      /* Crisp readable slate */
+    --text-muted: #94a3b8;          /* Clear secondary captions */
+    --text-inverse: #0b1120;
 
-    --border: #444937;
-    --border-strong: #6d7558;
-    --border-subtle: #2b2e23;
+    --border: #1e3250;              /* Defined slate-navy border */
+    --border-strong: #3b567d;       /* Sharp, thick, visible 2px border in dark mode */
+    --border-subtle: #152236;
 
     /* Form Controls */
-    --input-bg: #191b15;
-    --input-text: #f7f6f0;
-    --input-border: #6d7558;
-    --input-border-focus: #e5b338;
-    --input-placeholder: #807c6d;
+    --input-bg: #111c30;
+    --input-text: #f8fafc;
+    --input-border: #3b567d;
+    --input-border-focus: #38bdf8;
+    --input-placeholder: #64748b;
 
     /* Dropdowns */
-    --dropdown-bg: #191b15;
-    --dropdown-text: #f7f6f0;
-    --dropdown-border: #6d7558;
-    --dropdown-hover: #22251c;
-    --dropdown-selected: #333a23;
+    --dropdown-bg: #111c30;
+    --dropdown-text: #f8fafc;
+    --dropdown-border: #3b567d;
+    --dropdown-hover: #182640;
+    --dropdown-selected: #1e304f;
 
     /* Modals & Overlays */
-    --modal-bg: #191b15;
-    --modal-text: #f7f6f0;
-    --modal-border: #6d7558;
+    --modal-bg: #111c30;
+    --modal-text: #f8fafc;
+    --modal-border: #3b567d;
     --overlay-bg: rgba(0, 0, 0, 0.82);
 
     /* Buttons */
-    --button-bg: #c29014;
-    --button-text: #0e1208;
-    --button-ghost-border: #6d7558;
-    --button-ghost-hover: #22251c;
+    --button-bg: #38bdf8;
+    --button-text: #0b1120;
+    --button-ghost-border: #3b567d;
+    --button-ghost-hover: #182640;
 
     /* Status Indicators */
     --success: #34d399;

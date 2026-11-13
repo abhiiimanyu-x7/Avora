@@ -11,8 +11,69 @@ import threading
 import logging
 import requests as _requests
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+import math
+from collections import Counter
+
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+except ImportError:
+    class TfidfVectorizer:
+        """Pure-Python fallback for TF-IDF Vectorizer with zero external dependencies."""
+        def __init__(self, ngram_range=(1, 2), stop_words='english', sublinear_tf=True):
+            self.ngram_range = ngram_range
+            self.sublinear_tf = sublinear_tf
+            self.vocabulary_ = {}
+            self.idf_ = {}
+            self.doc_count = 0
+
+        def _tok(self, text):
+            words = re.findall(r'[a-z0-9]+', text.lower())
+            tokens = [x for x in words if len(x) > 1]
+            ng = list(tokens)
+            if self.ngram_range[1] >= 2 and len(tokens) >= 2:
+                for i in range(len(tokens) - 1):
+                    ng.append(f"{tokens[i]} {tokens[i+1]}")
+            return ng
+
+        def fit_transform(self, raw_documents):
+            self.doc_count = len(raw_documents)
+            doc_toks = [self._tok(d) for d in raw_documents]
+            df = Counter()
+            for tok in doc_toks:
+                df.update(set(tok))
+            self.vocabulary_ = {term: idx for idx, term in enumerate(df)}
+            self.idf_ = {
+                t: math.log((1 + self.doc_count) / (1 + c)) + 1.0
+                for t, c in df.items()
+            }
+            return [self._tf(t) for t in doc_toks]
+
+        def _tf(self, tokens):
+            counts = Counter(tokens)
+            vec = {}
+            sq = 0.0
+            for t, c in counts.items():
+                if t in self.vocabulary_:
+                    val = (1.0 + math.log(c)) if (self.sublinear_tf and c > 0) else float(c)
+                    val *= self.idf_[t]
+                    vec[t] = val
+                    sq += val * val
+            norm = math.sqrt(sq) or 1.0
+            return {t: v / norm for t, v in vec.items()}
+
+        def transform(self, raw_documents):
+            return [self._tf(self._tok(d)) for d in raw_documents]
+
+    def cosine_similarity(q_vecs, doc_vecs):
+        """Pure-Python cosine similarity."""
+        results = []
+        for q in q_vecs:
+            sims = []
+            for d in doc_vecs:
+                sims.append(sum(q[t] * d[t] for t in q if t in d))
+            results.append(sims)
+        return results
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KB_DIR = os.path.join(BASE_DIR, 'knowledge_base', 'Avora-rag')

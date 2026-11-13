@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}Avora | Khwaja Moinuddin Chishti Language University (KMCLU) Utility Portal{% endblock %}
+{% block title %}Avora | Khwaja Moinuddin Chishti Language University Utility Portal{% endblock %}
 
 {% block styles %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
 {% endblock %}
 
 {% block body %}
-<!-- 1. Top Government & Institutional Ribbon -->
+<!-- 1. Government & Institutional Ribbon -->
 <div class="univ-topbar">
     <div class="univ-topbar-left">
         <span class="univ-topbar-tag">
@@ -19,7 +19,7 @@
         <span class="univ-topbar-divider">|</span>
         <span>NAAC Accredited Grade "B++"</span>
         <span class="univ-topbar-divider">|</span>
-        <span>Lucknow, Uttar Pradesh (India)</span>
+        <span>Lucknow, Uttar Pradesh</span>
     </div>
     <div class="univ-topbar-right">
         <span>Helpline: +91-522-2774041</span>
@@ -28,7 +28,7 @@
         <span class="univ-topbar-divider">|</span>
         <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme"
             aria-label="Toggle theme"
-            style="width: 24px; height: 24px; border: none; background: transparent; color: #ffffff; padding: 0;">
+            style="width: 24px; height: 24px; border: none; background: transparent; color: #ffffff; padding: 0; cursor: pointer;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="5"></circle>
@@ -45,7 +45,7 @@
     </div>
 </div>
 
-<!-- 2. Official University Identity Header -->
+<!-- 2. Official University Header -->
 <header class="univ-header">
     <a href="{{ url_for('landing') }}" class="univ-brand-container">
         <img src="{{ url_for('static', filename='images/kmclu_crest.png') }}" alt="KMCLU Crest" class="univ-seal-img">
@@ -57,25 +57,25 @@
     </a>
 
     <div class="univ-header-badges">
-        <img src="{{ url_for('static', filename='images/naac_badge.png') }}" alt="NAAC B++ Accredited"
+        <img src="{{ url_for('static', filename='images/naac_badge.png') }}" alt="NAAC B++"
             class="naac-badge-header" title="NAAC B++ Accredited State University">
 
         <div class="portal-emblem-badge">
             <span class="portal-name">AVORA</span>
-            <span class="portal-sub">University Utility Portal</span>
+            <span class="portal-sub">Utility Portal</span>
         </div>
 
         <div style="display: flex; gap: var(--s-8); margin-left: var(--s-8);">
             {% if logged_in %}
-            {% if role == 'admin' %}
-            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary btn-sm">Admin Console</a>
+                {% if role == 'admin' %}
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary btn-sm">Admin Console</a>
+                {% else %}
+                <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary btn-sm">Student Desk</a>
+                {% endif %}
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost btn-sm">Sign Out</a>
             {% else %}
-            <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary btn-sm">Student Desk</a>
-            {% endif %}
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost btn-sm">Sign Out</a>
-            {% else %}
-            <a href="{{ url_for('auth.admin_login') }}" class="btn btn-ghost btn-sm">Admin Access</a>
-            <a href="{{ url_for('auth.student_login') }}" class="btn btn-primary btn-sm">Student Sign In</a>
+                <a href="{{ url_for('auth.admin_login') }}" class="btn btn-ghost btn-sm">Admin Access</a>
+                <a href="{{ url_for('auth.student_login') }}" class="btn btn-primary btn-sm">Student Sign In</a>
             {% endif %}
         </div>
     </div>
@@ -84,38 +84,25 @@
 <!-- 3. Navigation Bar -->
 <nav class="landing-nav" id="landing-nav">
     <div class="nav-links">
-        <a href="#services">University Services</a>
+        <a href="#services">Campus Services</a>
         <a href="#leadership">University Leadership</a>
-        <a href="#academics">Academics &amp; Faculties</a>
-        <a href="#governance">Governance</a>
-        <a href="https://kmclu.ac.in/" target="_blank" rel="noopener noreferrer">KMCLU Main Portal &nearr;</a>
+        <a href="{{ url_for('notices.feed') }}">Official Circulars</a>
+        <a href="{{ url_for('lost_found.feed') }}">Lost &amp; Found</a>
+        <a href="{{ url_for('contacts.directory') }}">Campus Directory</a>
+        <a href="https://kmclu.ac.in/" target="_blank" rel="noopener noreferrer">KMCLU Website &nearr;</a>
     </div>
 
     <div class="nav-actions">
         {% if not logged_in %}
         <a href="{{ url_for('auth.student_signup') }}"
-            style="color: var(--univ-gold); font-size: 0.8125rem; font-weight: 600; text-decoration: none;">
+            style="color: var(--univ-gold); font-size: 0.8125rem; font-weight: 700; text-decoration: none;">
             New Student Enrollment &rarr;
         </a>
         {% endif %}
     </div>
 </nav>
 
-<!-- 4. Official Notice Ticker -->
-<div class="univ-ticker-strip">
-    <span class="ticker-label">
-        <span
-            style="width: 6px; height: 6px; border-radius: 50%; background-color: #ffffff; display: inline-block;"></span>
-        University Dispatch
-    </span>
-    <div class="ticker-content">
-        Official digital campus registry active &bull; Student council voting with roll number verification &bull;
-        Academic deadlines and circular clearance feed &bull; Campus lost &amp; found moderation &bull; 24/7 Grounded AI
-        assistance powered by Ask Avora
-    </div>
-</div>
-
-<!-- 5. University Editorial Hero -->
+<!-- 4. Editorial University Hero -->
 <section class="landing-hero">
     <div class="hero-grid">
         <div>
@@ -123,29 +110,29 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
-                <span>State University Digital Governance &amp; Student Utilities</span>
+                <span>Digital Campus Governance &middot; KMCLU Lucknow</span>
             </div>
 
             <h1 class="hero-title">
-                One unified portal for <span>university life, utilities &amp; governance.</span>
+                One unified portal for <span>campus utilities &amp; student life.</span>
             </h1>
 
             <p class="hero-description">
-                Digital campus desk for Khwaja Moinuddin Chishti Language University. Student elections, circulars, lost property, and campus helpdesk in one verified platform.
+                Official centralized utility desk for Khwaja Moinuddin Chishti Language University. Access roll-verified elections, campus circulars, lost property, and 24/7 AI assistance.
             </p>
 
             <div class="hero-actions">
                 {% if not logged_in %}
                 <a href="{{ url_for('auth.student_signup') }}" class="btn btn-primary btn-lg">
-                    Create Student Profile
+                    Enroll Student Account
                 </a>
                 <a href="{{ url_for('auth.student_login') }}" class="btn btn-ghost btn-lg">
-                    Access Student Desk
+                    Student Desk Sign In
                 </a>
                 {% else %}
                 <a href="{{ url_for('student.dashboard') if role == 'student' else url_for('admin.dashboard') }}"
                     class="btn btn-primary btn-lg">
-                    Open Your Dashboard
+                    Open Your Dashboard &rarr;
                 </a>
                 {% endif %}
             </div>
@@ -161,55 +148,65 @@
                 </div>
                 <div class="hero-status-item">
                     <span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--info);"></span>
-                    <span>Lost &amp; Found Desk</span>
-                </div>
-                <div class="hero-status-item">
-                    <span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--warning);"></span>
-                    <span>Campus Helpdesk</span>
+                    <span>24/7 Ordinance AI</span>
                 </div>
             </div>
         </div>
 
-        <!-- Campus Dispatch Box -->
+        <!-- Quick Access Card -->
         <div class="hero-visual">
-            <div class="hero-dispatch-box">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s-8);">
-                    <span class="badge badge-active">Elections Cell</span>
-                    <span class="text-caption">KMCLU Voting</span>
-                </div>
-                <h4 style="margin-bottom: var(--s-4);">Student Council Voting</h4>
-                <p class="text-sm text-secondary">One-student one-vote verification with live turnout tracking.</p>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: var(--s-12); border-bottom: 2px solid var(--border-strong);">
+                <span style="font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent);">Direct Campus Utilities</span>
+                <span class="badge badge-active">Live Systems</span>
             </div>
 
-            <div class="hero-dispatch-box">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s-8);">
-                    <span class="badge badge-department">Registrar &amp; Proctor</span>
-                    <span class="text-caption">Official Circulars</span>
+            <a href="{{ url_for('student.elections') if logged_in else url_for('auth.student_login') }}" class="hero-dispatch-box" style="text-decoration: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span class="badge badge-department">Elections</span>
+                    <span style="font-size: 0.75rem; color: var(--accent); font-weight: 600;">Open &rarr;</span>
                 </div>
-                <h4 style="margin-bottom: var(--s-4);">Deadlines &amp; Notifications</h4>
-                <p class="text-sm text-secondary">Academic circulars, exam dates, fee timelines, and notices.</p>
-            </div>
+                <h4 style="margin-bottom: 2px; color: var(--text);">Student Council Voting</h4>
+                <p class="text-sm text-secondary" style="margin: 0;">Cast roll-verified ballots and inspect turnout tallies.</p>
+            </a>
 
-            <div class="hero-dispatch-box">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s-8);">
-                    <span class="badge badge-upcoming">Campus Assistant</span>
-                    <span class="text-caption">Ask Avora AI</span>
+            <a href="{{ url_for('notices.feed') }}" class="hero-dispatch-box" style="text-decoration: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span class="badge badge-upcoming">Notices</span>
+                    <span style="font-size: 0.75rem; color: var(--accent); font-weight: 600;">Open &rarr;</span>
                 </div>
-                <h4 style="margin-bottom: var(--s-4);">Grounded University Intelligence</h4>
-                <p class="text-sm text-secondary">Instant campus answers retrieved from official ordinances and syllabi.</p>
-            </div>
+                <h4 style="margin-bottom: 2px; color: var(--text);">Circulars &amp; Timelines</h4>
+                <p class="text-sm text-secondary" style="margin: 0;">Examination timetables, fee circulars, and university orders.</p>
+            </a>
+
+            <a href="{{ url_for('lost_found.feed') }}" class="hero-dispatch-box" style="text-decoration: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span class="badge badge-active">Lost &amp; Found</span>
+                    <span style="font-size: 0.75rem; color: var(--accent); font-weight: 600;">Open &rarr;</span>
+                </div>
+                <h4 style="margin-bottom: 2px; color: var(--text);">Campus Property Desk</h4>
+                <p class="text-sm text-secondary" style="margin: 0;">Search lost belongings or claim found articles on campus.</p>
+            </a>
+
+            <a href="{{ url_for('ask_avora.index') }}" class="hero-dispatch-box" style="text-decoration: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span class="badge badge-department">Ask Avora</span>
+                    <span style="font-size: 0.75rem; color: var(--accent); font-weight: 600;">Open &rarr;</span>
+                </div>
+                <h4 style="margin-bottom: 2px; color: var(--text);">Grounded Campus AI</h4>
+                <p class="text-sm text-secondary" style="margin: 0;">Get immediate answers verified against official KMCLU rules.</p>
+            </a>
         </div>
     </div>
 </section>
 
-<!-- 6. Hon'ble University Leadership & Dignitaries -->
+<!-- 5. University Leadership & Dignitaries -->
 <section class="leadership-section" id="leadership">
     <div class="leadership-inner">
         <div class="section-header" style="text-align: center; margin: 0 auto var(--s-32);">
-            <span class="overline" style="color: var(--univ-gold);">Institutional Leadership &amp; Patronage</span>
-            <h2>University Governance &amp; Administration</h2>
-            <p class="text-lead" style="margin: 0 auto;">
-                Distinguished leadership steering KMCLU towards educational excellence.
+            <span class="overline" style="color: var(--univ-gold);">Institutional Patronage</span>
+            <h2>University Leadership</h2>
+            <p class="text-lead" style="margin: 0 auto; max-width: 600px;">
+                Hon'ble leadership guiding Khwaja Moinuddin Chishti Language University.
             </p>
         </div>
 
@@ -223,10 +220,10 @@
                         onerror="this.src='{{ url_for('static', filename='images/chancellor_anandiben_patel.jpg') }}'">
                 </div>
                 <h3 class="leader-name">Smt. Anandiben Patel</h3>
-                <div class="leader-designation">Hon'ble Governor of UP &amp; Chancellor</div>
+                <div class="leader-designation">Hon'ble Governor of Uttar Pradesh &amp; Chancellor</div>
                 <span class="leader-role-tag">Chancellor &middot; KMCLU</span>
                 <p class="leader-bio">
-                    Constitutional patronage and guidance fostering academic excellence and language studies.
+                    Constitutional patronage and guidance steering university governance, multilingual academic development, and institutional excellence.
                 </p>
             </div>
 
@@ -241,59 +238,41 @@
                 <div class="leader-designation">Hon'ble Vice Chancellor</div>
                 <span class="leader-role-tag">Executive Leadership</span>
                 <p class="leader-bio">
-                    Executive leadership, digital campus governance, and academic innovation under NEP 2020.
-                </p>
-            </div>
-
-            <!-- NAAC Accreditation & Institutional Standing -->
-            <div class="leader-card" style="border-top: 4px solid var(--accent);">
-                <div class="leader-card-topbar" style="background-color: var(--accent);"></div>
-                <div class="leader-photo-wrapper"
-                    style="background: linear-gradient(135deg, var(--accent), var(--univ-gold)); display: flex; align-items: center; justify-content: center;">
-                    <img src="{{ url_for('static', filename='images/naac_badge.png') }}" alt="NAAC Emblem"
-                        style="width: 80%; height: 80%; object-fit: contain;">
-                </div>
-                <h3 class="leader-name">NAAC Accredited Grade "B++"</h3>
-                <div class="leader-designation">CGPA 2.86 &middot; National Accreditation</div>
-                <span class="leader-role-tag">State University Standing</span>
-                <p class="leader-bio">
-                    UGC Recognized State University established under the UP State Universities Act, 2009.
+                    Executive administration leading digital campus transformation, academic innovation, and holistic student support under NEP 2020.
                 </p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- 7. Core Services Compendium -->
+<!-- 6. Core Services Compendium -->
 <section class="landing-section" id="services">
     <div class="section-header">
         <span class="overline">Service Compendium</span>
         <h2>Eight Core Digital Campus Utilities</h2>
         <p class="text-lead">
-            Purpose-built digital systems fulfilling daily university requirements.
+            Direct access to official university services for students, faculty, and administrative staff.
         </p>
     </div>
 
     <div class="services-compendium">
         <!-- 1. Elections -->
-        <div class="service-entry">
+        <a href="{{ url_for('student.elections') if logged_in else url_for('auth.student_login') }}" class="service-entry">
             <div class="service-icon-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
                     <line x1="16" y1="13" x2="8" y2="13"></line>
                 </svg>
             </div>
             <h3>1. Campus Elections</h3>
-            <p>One-vote verification, candidate manifestos, live turnout, and certified results.</p>
-        </div>
+            <p>Roll-verified student voting, manifestos, live voter turnout, and tamper-proof tallies.</p>
+        </a>
 
         <!-- 2. Lost & Found -->
-        <div class="service-entry">
+        <a href="{{ url_for('lost_found.feed') }}" class="service-entry">
             <div class="service-icon-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     <path d="M11 8v6"></path>
@@ -301,182 +280,97 @@
                 </svg>
             </div>
             <h3>2. Lost &amp; Found Desk</h3>
-            <p>Searchable item database with verification questions and admin claim approvals.</p>
-        </div>
+            <p>Campus lost property registry with security question verification and claim moderation.</p>
+        </a>
 
         <!-- 3. Notices & Deadlines -->
-        <div class="service-entry">
+        <a href="{{ url_for('notices.feed') }}" class="service-entry">
             <div class="service-icon-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                 </svg>
             </div>
             <h3>3. Notices &amp; Deadlines</h3>
-            <p>Centralized bulletin for exam schedules, fee timelines, and circulars.</p>
-        </div>
+            <p>Official registrar bulletins, exam routines, fee dates, and proctorial orders.</p>
+        </a>
 
         <!-- 4. Digital Wellbeing -->
-        <div class="service-entry">
+        <a href="{{ url_for('wellbeing.checkin') if logged_in else url_for('auth.student_login') }}" class="service-entry">
             <div class="service-icon-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
-                    </path>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                 </svg>
             </div>
             <h3>4. Digital Wellbeing</h3>
-            <p>Private daily check-in, mood log, and verified campus counselor contacts.</p>
-        </div>
+            <p>Confidential daily wellness checks, mood logs, and certified campus counselor contacts.</p>
+        </a>
 
         <!-- 5. Campus Contacts -->
-        <div class="service-entry">
+        <a href="{{ url_for('contacts.directory') }}" class="service-entry">
             <div class="service-icon-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path
-                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                    </path>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                 </svg>
             </div>
             <h3>5. Campus Contacts</h3>
-            <p>Direct directory of deans, HODs, exam cell officers, and emergency helplines.</p>
-        </div>
+            <p>Verified contact directory for deans, department heads, exam cell, and emergency helplines.</p>
+        </a>
 
         <!-- 6. Campus Map -->
-        <div class="service-entry">
+        <a href="{{ url_for('map.view_map') }}" class="service-entry">
             <div class="service-icon-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
                     <line x1="8" y1="2" x2="8" y2="18"></line>
                     <line x1="16" y1="6" x2="16" y2="22"></line>
                 </svg>
             </div>
             <h3>6. Campus Map</h3>
-            <p>Interactive spatial layout of academic blocks, libraries, labs, hostels, and offices.</p>
-        </div>
+            <p>Spatial guide for academic blocks, libraries, laboratories, hostels, and administrative offices.</p>
+        </a>
 
         <!-- 7. Campus Issues -->
-        <div class="service-entry">
+        <a href="{{ url_for('student.report_issue') if logged_in else url_for('auth.student_login') }}" class="service-entry">
             <div class="service-icon-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
-                    </path>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                     <line x1="12" y1="9" x2="12" y2="13"></line>
                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
             </div>
             <h3>7. Campus Issues &amp; Faults</h3>
-            <p>Report maintenance, lab equipment, or Wi-Fi faults with ticket progress tracking.</p>
-        </div>
+            <p>Direct ticket filing for lab equipment, electrical, facility, and network maintenance.</p>
+        </a>
 
         <!-- 8. Ask Avora AI -->
-        <div class="service-entry">
+        <a href="{{ url_for('ask_avora.index') }}" class="service-entry">
             <div class="service-icon-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="16" x2="12" y2="12"></line>
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
                 </svg>
             </div>
             <h3>8. Grounded Knowledge AI</h3>
-            <p>Instant answers grounded strictly in university ordinances and syllabus records.</p>
-        </div>
+            <p>24/7 grounded answers retrieved directly from official university ordinances and syllabi.</p>
+        </a>
     </div>
 </section>
 
-<!-- 8. Academics Section -->
-<section class="academics-section" id="academics">
-    <div class="academics-inner">
-        <div class="section-header">
-            <span class="overline">Academic Excellence</span>
-            <h2>Programmes, Calendar &amp; Resources</h2>
-            <p class="text-lead">
-                Multilingual education, technology, law, and research across university departments.
-            </p>
-        </div>
-
-        <div class="academics-grid">
-            <div class="academic-card">
-                <div>
-                    <span class="badge badge-department" style="margin-bottom: var(--s-12);">Academic Faculties</span>
-                    <h4>Multidisciplinary Programmes</h4>
-                    <p>Degree programmes across B.Tech, BCA, MCA, Sciences, Law, and Languages under NEP 2020.</p>
-                </div>
-                <div class="academic-card-footer">
-                    <span>20+ Departments</span>
-                    <span>Session 2026-27</span>
-                </div>
-            </div>
-
-            <div class="academic-card">
-                <div>
-                    <span class="badge badge-upcoming" style="margin-bottom: var(--s-12);">Academic Calendar</span>
-                    <h4>Schedules &amp; Examination Timelines</h4>
-                    <p>Semester schedules, mid-term examinations, fee deadlines, and convocation dates.</p>
-                </div>
-                <div class="academic-card-footer">
-                    <span>Proctor Office</span>
-                    <span>Verified Schedules</span>
-                </div>
-            </div>
-
-            <div class="academic-card">
-                <div>
-                    <span class="badge badge-active" style="margin-bottom: var(--s-12);">Central Facilities</span>
-                    <h4>Central Library &amp; Student Center</h4>
-                    <p>Central library, language laboratories, reading halls, and health dispensary facilities.</p>
-                </div>
-                <div class="academic-card-footer">
-                    <span>Central Library</span>
-                    <span>KMCLU Campus</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- 9. Governance & Institutional Standing -->
-<section class="institution-banner" id="governance">
-    <div class="banner-inner">
-        <div class="banner-col">
-            <span class="overline">Institutional Standing</span>
-            <h3>Khwaja Moinuddin Chishti Language University</h3>
-            <p>
-                State University established under the UP State Universities Act, 2009, dedicated to academic excellence and multidisciplinary language studies.
-            </p>
-        </div>
-        <div class="banner-col">
-            <span class="overline">Platform Governance &amp; Security</span>
-            <h3>Controlled Access and Auditing</h3>
-            <p>
-                Roll-verified student authentication, scoped proctorial administration, and immutable audit logging.
-            </p>
-        </div>
-    </div>
-</section>
-
-<!-- 10. University Institutional Footer -->
+<!-- 7. Institutional Footer -->
 <footer class="landing-footer">
     <div class="footer-inner">
         <div>
-            <strong>AVORA</strong> &middot; Khwaja Moinuddin Chishti Language University, Sitapur-Hardoi Bypass Road,
-            Mohaan Road, Lucknow, Uttar Pradesh 226013
+            <strong>AVORA</strong> &middot; Khwaja Moinuddin Chishti Language University &middot; Sitapur-Hardoi Bypass Road, Mohaan Road, Lucknow, UP 226013
         </div>
         <div style="display: flex; gap: var(--s-16); align-items: center; flex-wrap: wrap;">
             <span><a href="https://kmclu.ac.in/" target="_blank" rel="noopener noreferrer"
-                    style="color: var(--accent); font-weight: 600; text-decoration: underline;">Official KMCLU
-                    Portal</a></span>
+                    style="color: var(--accent); font-weight: 600; text-decoration: underline;">Official KMCLU Portal &nearr;</a></span>
             &middot;
             <span>Built by <a href="https://www.linkedin.com/in/abhimanyusingh0111/" target="_blank"
                     rel="noopener noreferrer"
-                    style="color: var(--accent); font-weight: 600; text-decoration: underline;">Abhimanyu
-                    Singh</a></span>
+                    style="color: var(--accent); font-weight: 600; text-decoration: underline;">Abhimanyu Singh</a></span>
             &middot;
             <a href="{{ url_for('auth.admin_login') }}">Admin Login</a>
         </div>

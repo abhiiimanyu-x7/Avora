@@ -111,6 +111,7 @@
                 <div class="form-group">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s-8);">
                         <label for="password" class="form-label" style="margin-bottom: 0;">Password</label>
+                        <a href="{{ url_for('auth.forgot_password', role='student') }}" style="font-size: 0.8rem; font-weight: 600; color: var(--accent); text-decoration: underline;">Forgot password?</a>
                     </div>
                     <input type="password" name="password" id="password" class="form-input" placeholder="Enter your account password" required minlength="6">
                 </div>

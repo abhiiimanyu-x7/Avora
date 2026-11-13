@@ -108,13 +108,17 @@
                     </div>
 
                     {% if not bypass_otp %}
-                    <div style="background-color: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--s-12) var(--s-16); margin-bottom: var(--s-16);">
-                        <label for="otp" class="form-label">Email Verification Code</label>
-                        <div style="display: flex; gap: var(--s-8);">
-                            <input type="text" name="otp" id="otp" class="form-input" placeholder="6-digit code" maxlength="6" style="max-width: 140px;">
-                            <button type="button" class="btn btn-ghost btn-sm" id="send-otp-btn">Send OTP</button>
+                    <div style="background-color: var(--surface-2); border: 2px solid var(--border); border-radius: var(--radius-sm); padding: var(--s-16); margin-bottom: var(--s-16);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <label for="otp" class="form-label" style="margin-bottom: 0;">Email Verification Code</label>
+                            <span id="otp-countdown" style="font-size: 0.775rem; font-weight: 700; color: var(--warning); display: none;">⏱️ 60s remaining</span>
                         </div>
-                        <p id="otp-status" class="form-helper"></p>
+                        <div style="display: flex; gap: var(--s-8); margin-top: 6px;">
+                            <input type="text" name="otp" id="otp" class="form-input" placeholder="6-digit code" maxlength="6" style="max-width: 130px; font-family: monospace; letter-spacing: 2px; font-weight: 700;">
+                            <button type="button" class="btn btn-ghost btn-sm" id="send-otp-btn" style="white-space: nowrap; border: 2px solid var(--border-strong);">Send OTP</button>
+                            <button type="button" class="btn btn-primary btn-sm" id="verify-otp-btn" style="white-space: nowrap;" disabled>Verify OTP</button>
+                        </div>
+                        <div id="otp-status" class="form-helper" style="margin-top: 6px; font-weight: 600;"></div>
                     </div>
                     {% endif %}
                 </div>
@@ -183,8 +187,42 @@
 {% if not bypass_otp %}
 <script>
     const sendOtpBtn = document.getElementById('send-otp-btn');
+    const verifyOtpBtn = document.getElementById('verify-otp-btn');
+    const otpInput = document.getElementById('otp');
     const otpStatus = document.getElementById('otp-status');
+    const otpCountdown = document.getElementById('otp-countdown');
     const emailInput = document.getElementById('email');
+    const signupForm = document.getElementById('signup-form');
+
+    let countdownInterval = null;
+    let isOtpVerified = false;
+
+    function startTimer(seconds) {
+        clearInterval(countdownInterval);
+        let timeLeft = seconds;
+        otpCountdown.style.display = 'inline-block';
+        otpCountdown.style.color = 'var(--warning)';
+        otpCountdown.textContent = `⏱️ ${timeLeft}s remaining`;
+        otpInput.disabled = false;
+
+        countdownInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                otpCountdown.textContent = '⏱️ Code expired (60s limit)';
+                otpCountdown.style.color = 'var(--danger)';
+                verifyOtpBtn.disabled = true;
+                sendOtpBtn.disabled = false;
+                sendOtpBtn.textContent = 'Resend OTP';
+                if (!isOtpVerified) {
+                    otpStatus.textContent = 'Verification code has expired. Please click Resend OTP.';
+                    otpStatus.style.color = 'var(--danger)';
+                }
+            } else {
+                otpCountdown.textContent = `⏱️ ${timeLeft}s remaining`;
+            }
+        }, 1000);
+    }
 
     if (sendOtpBtn) {
         sendOtpBtn.addEventListener('click', async () => {
@@ -194,24 +232,19 @@
             if (!email) {
                 otpStatus.textContent = 'Please enter your email address first.';
                 otpStatus.style.color = 'var(--danger)';
+                emailInput.focus();
                 return;
             }
 
             if (!allowAny && !email.endsWith('@kmclu.ac.in')) {
-                otpStatus.textContent = 'Please enter a valid @kmclu.ac.in email address.';
-                otpStatus.style.color = 'var(--danger)';
-                return;
-            }
-
-            if (allowAny && (!email.includes('@') || !email.includes('.'))) {
-                otpStatus.textContent = 'Please enter a valid email address.';
+                otpStatus.textContent = 'Please enter an authorized @kmclu.ac.in institutional email.';
                 otpStatus.style.color = 'var(--danger)';
                 return;
             }
 
             sendOtpBtn.disabled = true;
             sendOtpBtn.textContent = 'Sending...';
-            otpStatus.textContent = 'Contacting server...';
+            otpStatus.textContent = 'Dispatching verification code...';
             otpStatus.style.color = 'var(--text-muted)';
 
             try {
@@ -222,21 +255,80 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    otpStatus.textContent = 'Verification code sent to your email.';
+                    otpStatus.textContent = 'Code sent! You have 60 seconds to enter it.';
                     otpStatus.style.color = 'var(--success)';
+                    verifyOtpBtn.disabled = false;
+                    otpInput.focus();
+                    startTimer(60);
                 } else {
                     otpStatus.textContent = data.message || 'Failed to send code.';
                     otpStatus.style.color = 'var(--danger)';
+                    sendOtpBtn.disabled = false;
+                    sendOtpBtn.textContent = 'Send OTP';
                 }
             } catch (err) {
-                otpStatus.textContent = 'Network error while sending code.';
+                otpStatus.textContent = 'Network error while sending verification code.';
                 otpStatus.style.color = 'var(--danger)';
-            } finally {
                 sendOtpBtn.disabled = false;
-                sendOtpBtn.textContent = 'Resend Code';
+                sendOtpBtn.textContent = 'Send OTP';
             }
         });
     }
+
+    // Verify OTP button handler
+    if (verifyOtpBtn) {
+        verifyOtpBtn.addEventListener('click', async () => {
+            const email = emailInput.value.trim().toLowerCase();
+            const code = otpInput.value.trim();
+
+            if (!code || code.length !== 6) {
+                otpStatus.textContent = 'Please enter the complete 6-digit code.';
+                otpStatus.style.color = 'var(--danger)';
+                otpInput.focus();
+                return;
+            }
+
+            verifyOtpBtn.disabled = true;
+            verifyOtpBtn.textContent = 'Checking...';
+
+            try {
+                const res = await fetch('{{ url_for("auth.verify_otp") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, otp: code })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    clearInterval(countdownInterval);
+                    isOtpVerified = true;
+                    otpStatus.textContent = '✓ Code verified successfully! You may complete registration.';
+                    otpStatus.style.color = 'var(--success)';
+                    otpCountdown.textContent = '✓ Verified';
+                    otpCountdown.style.color = 'var(--success)';
+                    otpInput.readOnly = true;
+                    verifyOtpBtn.textContent = 'Verified';
+                    sendOtpBtn.disabled = true;
+                } else {
+                    otpStatus.textContent = data.message || 'Invalid verification code.';
+                    otpStatus.style.color = 'var(--danger)';
+                    verifyOtpBtn.disabled = false;
+                    verifyOtpBtn.textContent = 'Verify OTP';
+                }
+            } catch (err) {
+                otpStatus.textContent = 'Connection error. Please try again.';
+                otpStatus.style.color = 'var(--danger)';
+                verifyOtpBtn.disabled = false;
+                verifyOtpBtn.textContent = 'Verify OTP';
+            }
+        });
+    }
+
+    // Enable verify button when 6 digits are typed
+    otpInput?.addEventListener('input', () => {
+        if (!isOtpVerified && otpInput.value.trim().length === 6) {
+            verifyOtpBtn.disabled = false;
+        }
+    });
 </script>
 {% endif %}
 {% endblock %}

@@ -121,6 +121,27 @@ def change_admin_password(user_id, current_password, new_password):
     return {'success': True, 'message': 'Password changed successfully!'}
 
 
+def reset_user_password(email, new_password, role=None):
+    """Reset password for a user (student or admin) via email verification."""
+    db = get_db()
+    query = {'email': email.strip().lower()}
+    if role:
+        query['role'] = role
+    user = db.users.find_one(query)
+    if not user:
+        return {'success': False, 'message': 'No registered account found with this email address.'}
+    if len(new_password) < 6:
+        return {'success': False, 'message': 'Password must be at least 6 characters.'}
+    db.users.update_one(
+        {'_id': user['_id']},
+        {'$set': {
+            'password_hash': generate_password_hash(new_password),
+            'updated_at': datetime.utcnow()
+        }}
+    )
+    return {'success': True, 'message': 'Password reset successfully!'}
+
+
 def change_student_password(user_id, current_password, new_password):
     """Change a student user's password after verifying the current one.
 

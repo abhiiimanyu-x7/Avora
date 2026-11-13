@@ -394,7 +394,7 @@ p {
     padding: 10px 14px;
     background-color: var(--input-bg);
     color: var(--input-text);
-    border: 1px solid var(--input-border);
+    border: 2px solid var(--border);
     border-radius: var(--radius-sm);
     font-size: 0.925rem;
     transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
@@ -406,8 +406,8 @@ p {
 
 .form-input:focus {
     outline: none;
-    border-color: var(--input-border-focus);
-    box-shadow: 0 0 0 2px var(--accent-soft);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 /* Explicit Native Select & Dropdowns in Both Themes */
@@ -416,7 +416,7 @@ p {
     padding: 10px 38px 10px 14px;
     background-color: var(--dropdown-bg);
     color: var(--dropdown-text);
-    border: 1px solid var(--dropdown-border);
+    border: 2px solid var(--border);
     border-radius: var(--radius-sm);
     font-size: 0.925rem;
     appearance: none;
@@ -425,13 +425,13 @@ p {
     background-repeat: no-repeat;
     background-position: right 12px center;
     cursor: pointer;
-    transition: border-color var(--dur-fast);
+    transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
 }
 
 .form-select:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px var(--accent-soft);
+    box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .form-select option {

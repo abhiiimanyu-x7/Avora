@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify, current_app
 from services.user_service import (
     create_user, authenticate_user, get_user_by_email, get_user_by_roll_no,
-    get_db, get_user_by_email_and_role, get_system_setting
+    get_db, get_user_by_email_and_role, get_system_setting, reset_user_password
 )
 from services.email_service import generate_otp, send_otp_email
 from config import Config
@@ -43,7 +43,7 @@ def send_otp():
 
 @auth_bp.route('/student/verify-otp', methods=['POST'])
 def verify_otp():
-    """Verify OTP for registration."""
+    """Verify OTP for registration with 60-second time limit."""
     data = request.get_json() or {}
     email = data.get('email', '').strip().lower()
     otp_input = data.get('otp', '').strip()
@@ -54,9 +54,15 @@ def verify_otp():
     db = get_db()
     otp_record = db.otps.find_one({'email': email})
     if not otp_record or otp_record.get('otp') != otp_input:
-        return jsonify({'success': False, 'message': 'Invalid or expired OTP.'}), 400
+        return jsonify({'success': False, 'message': 'Invalid verification code.'}), 400
+
+    created_at = otp_record.get('createdAt')
+    if created_at:
+        elapsed = (datetime.utcnow() - created_at).total_seconds()
+        if elapsed > Config.OTP_EXPIRY_SECONDS:
+            return jsonify({'success': False, 'message': f'Verification code has expired ({Config.OTP_EXPIRY_SECONDS}s limit). Please request a new one.'}), 400
         
-    return jsonify({'success': True, 'message': 'OTP verified successfully!'})
+    return jsonify({'success': True, 'message': 'Verification code verified successfully!'})
 
 
 @auth_bp.route('/student/signup', methods=['GET', 'POST'])
@@ -93,6 +99,10 @@ def student_signup():
             otp_record = db.otps.find_one({'email': email})
             if not otp_record or otp_record.get('otp') != otp_input:
                 errors.append('Invalid or expired OTP.')
+            elif otp_record.get('createdAt'):
+                elapsed = (datetime.utcnow() - otp_record['createdAt']).total_seconds()
+                if elapsed > Config.OTP_EXPIRY_SECONDS:
+                    errors.append(f'OTP code expired ({Config.OTP_EXPIRY_SECONDS}s limit). Please request a new code.')
                 
         if password != confirm_password:
             errors.append('Passwords do not match.')
@@ -259,3 +269,114 @@ def logout():
     session.clear()
     flash('You have been logged out.', 'info')
     return redirect(url_for('landing'))
+
+
+# ── Forgot Password Flow ──
+
+@auth_bp.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    """Forgot password request and reset page."""
+    role = request.args.get('role', 'student').strip().lower()
+    if role not in ('student', 'admin'):
+        role = 'student'
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        form_role = request.form.get('role', role).strip().lower()
+        otp_input = request.form.get('otp', '').strip()
+        new_password = request.form.get('new_password', '')
+        confirm_password = request.form.get('confirm_password', '')
+
+        if not email:
+            flash('Email address is required.', 'error')
+            return render_template('auth/forgot_password.html', role=form_role, email=email)
+
+        if not Config.BYPASS_OTP and not otp_input:
+            flash('One-Time Password (OTP) is required.', 'error')
+            return render_template('auth/forgot_password.html', role=form_role, email=email)
+
+        if not new_password or len(new_password) < 6:
+            flash('New password must be at least 6 characters.', 'error')
+            return render_template('auth/forgot_password.html', role=form_role, email=email)
+
+        if new_password != confirm_password:
+            flash('Passwords do not match.', 'error')
+            return render_template('auth/forgot_password.html', role=form_role, email=email)
+
+        # Verify OTP with 60s limit
+        db = get_db()
+        if not Config.BYPASS_OTP:
+            otp_record = db.otps.find_one({'email': email})
+            if not otp_record or otp_record.get('otp') != otp_input:
+                flash('Invalid or expired OTP. Please request a new code.', 'error')
+                return render_template('auth/forgot_password.html', role=form_role, email=email)
+            elif otp_record.get('createdAt'):
+                elapsed = (datetime.utcnow() - otp_record['createdAt']).total_seconds()
+                if elapsed > Config.OTP_EXPIRY_SECONDS:
+                    flash(f'Verification code expired ({Config.OTP_EXPIRY_SECONDS}s limit). Please request a new code.', 'error')
+                    return render_template('auth/forgot_password.html', role=form_role, email=email)
+
+        # Execute password reset
+        result = reset_user_password(email, new_password, role=form_role)
+        if result.get('success'):
+            db.otps.delete_one({'email': email})
+            flash('Password reset successfully! Please sign in with your new password.', 'success')
+            if form_role == 'admin':
+                return redirect(url_for('auth.admin_login'))
+            return redirect(url_for('auth.student_login'))
+        else:
+            flash(result.get('message', 'Failed to reset password.'), 'error')
+            return render_template('auth/forgot_password.html', role=form_role, email=email)
+
+    return render_template('auth/forgot_password.html', role=role, bypass_otp=Config.BYPASS_OTP)
+
+
+@auth_bp.route('/forgot-password/send-otp', methods=['POST'])
+def forgot_password_send_otp():
+    """Send OTP for password reset."""
+    data = request.get_json() or {}
+    email = data.get('email', '').strip().lower()
+    role = data.get('role', 'student').strip().lower()
+
+    if not email:
+        return jsonify({'success': False, 'message': 'Email address is required.'}), 400
+
+    db = get_db()
+    user = db.users.find_one({'email': email, 'role': role})
+    if not user:
+        return jsonify({'success': False, 'message': f'No {role} account found matching this email.'}), 404
+
+    otp = generate_otp()
+    db.otps.update_one(
+        {'email': email},
+        {'$set': {'otp': otp, 'createdAt': datetime.utcnow()}},
+        upsert=True
+    )
+
+    if send_otp_email(email, otp, purpose="Password Reset"):
+        return jsonify({'success': True, 'message': 'Verification code sent to your email.'})
+    return jsonify({'success': False, 'message': 'Failed to send verification code. Try again.'}), 500
+
+
+@auth_bp.route('/forgot-password/verify-otp', methods=['POST'])
+def forgot_password_verify_otp():
+    """Verify OTP for password reset with 60-second time limit."""
+    data = request.get_json() or {}
+    email = data.get('email', '').strip().lower()
+    otp_input = data.get('otp', '').strip()
+
+    if not email or not otp_input:
+        return jsonify({'success': False, 'message': 'Email and verification code are required.'}), 400
+
+    db = get_db()
+    otp_record = db.otps.find_one({'email': email})
+    if not otp_record or otp_record.get('otp') != otp_input:
+        return jsonify({'success': False, 'message': 'Invalid verification code.'}), 400
+
+    created_at = otp_record.get('createdAt')
+    if created_at:
+        elapsed = (datetime.utcnow() - created_at).total_seconds()
+        if elapsed > Config.OTP_EXPIRY_SECONDS:
+            return jsonify({'success': False, 'message': f'Code has expired ({Config.OTP_EXPIRY_SECONDS}s limit). Please request a new one.'}), 400
+
+    return jsonify({'success': True, 'message': 'Code verified successfully!'})
